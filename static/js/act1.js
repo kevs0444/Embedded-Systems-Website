@@ -73,7 +73,6 @@ class SimpleChart {
             </div>
         `;
 
-        // Fix: position relative to canvas container
         const rect = this.canvas.getBoundingClientRect();
         const offsetX = x - rect.left;
         const offsetY = y - rect.top;
@@ -193,6 +192,22 @@ class SimpleChart {
 let realChart, histChart;
 let errorNotificationShown = false;
 
+// Modal functions
+function showBackModal() {
+    const modal = document.getElementById('backModal');
+    modal.classList.add('show');
+}
+
+function hideBackModal() {
+    const modal = document.getElementById('backModal');
+    modal.classList.remove('show');
+}
+
+function handleBackConfirmation() {
+    hideBackModal();
+    window.location.href = '/stop_act1';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     initCharts();
@@ -202,11 +217,32 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(fetchData, 5000);
 
     document.getElementById('clearData').onclick = clearHistoricalData;
+    
+    // Add event listeners for back button and modal
+    const backButton = document.querySelector('.back-btn');
+    if (backButton) {
+        backButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            showBackModal();
+        });
+    }
+    
+    // Modal event listeners
+    document.getElementById('modalClose').addEventListener('click', hideBackModal);
+    document.getElementById('modalCancel').addEventListener('click', hideBackModal);
+    document.getElementById('modalConfirm').addEventListener('click', handleBackConfirmation);
+    
+    // Close modal when clicking outside
+    document.getElementById('backModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            hideBackModal();
+        }
+    });
 });
 
 function initTheme() {
     const themeBtn = document.getElementById('themeBtn');
-    const saved = 'light';
+    const saved = localStorage.getItem('theme') || 'light';
     
     document.body.setAttribute('data-theme', saved);
     themeBtn.textContent = saved === 'light' ? '🌙' : '☀️';
@@ -216,10 +252,11 @@ function initTheme() {
         const newTheme = current === 'light' ? 'dark' : 'light';
         document.body.setAttribute('data-theme', newTheme);
         themeBtn.textContent = newTheme === 'light' ? '🌙' : '☀️';
+        localStorage.setItem('theme', newTheme);
         
         setTimeout(() => {
-            realChart.draw();
-            histChart.draw();
+            if (realChart) realChart.draw();
+            if (histChart) histChart.draw();
         }, 100);
     };
 }
@@ -229,7 +266,7 @@ function initCharts() {
     const histCanvas = document.getElementById('histChart');
     
     realChart = new SimpleChart(realCanvas, { maxPoints: 20 });
-    histChart = new SimpleChart(histCanvas, { maxPoints: 500 }); // Increased for historical data
+    histChart = new SimpleChart(histCanvas, { maxPoints: 500 });
     
     realChart.setTooltip(document.getElementById('realTooltip'));
     histChart.setTooltip(document.getElementById('histTooltip'));
@@ -239,8 +276,7 @@ function initCharts() {
 }
 
 function loadHistoricalData() {
-    // Load historical data from backend on page load
-    fetch('/history')  // Changed from '/load_history'
+    fetch('/history')
         .then(res => res.json())
         .then(data => {
             if (data.labels && data.labels.length > 0) {
@@ -386,9 +422,4 @@ function clearHistoricalData() {
 // Refresh historical data every 5 minutes
 setInterval(() => {
     loadHistoricalData();
-}, 300000); // 5 minutes
-
-// Optional: Add a manual refresh button for historical data
-function refreshHistoricalData() {
-    loadHistoricalData();
-}
+}, 300000);

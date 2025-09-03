@@ -5,15 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DHT11 Dashboard - SystemShapers</title>
     <link rel="stylesheet" href="/static/css/act1.css">
-    <style>
-        /* Only apply to notif + badge icons, NOT buzzer */
-        .notif-icon img,
-        .badge img {
-            width: 18px;
-            height: 18px;
-            vertical-align: middle;
-        }
-    </style>
 </head>
 <body data-theme="light">
     <div class="status" id="status">🟢</div>
@@ -32,16 +23,37 @@
         </div>
     </div>
     
+    <!-- Back Confirmation Modal -->
+    <div class="modal" id="backModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Confirm Navigation</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to go back to the main menu?</p>
+                <p>This will stop the sensor monitoring and clean up GPIO resources.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn cancel" id="modalCancel">Cancel</button>
+                <button class="modal-btn confirm" id="modalConfirm">Yes, Go Back</button>
+            </div>
+        </div>
+    </div>
+    
     <header>
         <div class="header-content">
-            <div class="brand">
-                <h1>
-                    <img src="/static/icons/thermometer.png" 
-                         alt="Thermometer Icon" 
-                         style="width:28px;height:28px;vertical-align:middle;">
-                    DHT11 Dashboard
-                </h1>
-                <small>by System Shapers</small>
+            <div class="header-nav">
+                <a href="#" class="back-btn">←</a>
+                <div class="brand">
+                    <h1>
+                        <img src="/static/icons/thermometer.png" 
+                             alt="Thermometer Icon" 
+                             style="width:28px;height:28px;vertical-align:middle;">
+                        DHT11 Dashboard
+                    </h1>
+                    <small>by System Shapers</small>
+                </div>
             </div>
             <button class="theme-btn" id="themeBtn">🌙</button>
         </div>

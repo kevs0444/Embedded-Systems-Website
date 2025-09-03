@@ -87,6 +87,33 @@ header {
     background: var(--border);
 }
 
+/* Back button styling */
+.back-btn {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    color: var(--text);
+    margin-right: 1rem;
+}
+
+.back-btn:hover {
+    background: var(--border);
+}
+
+.header-nav {
+    display: flex;
+    align-items: center;
+}
+
 /* Status indicator */
 .status {
     position: fixed;
@@ -172,6 +199,122 @@ header {
 
 .notif-close:hover {
     background: var(--border);
+}
+
+/* Modal */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.modal.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    background: var(--card);
+    border-radius: 8px;
+    box-shadow: var(--shadow-lg);
+    width: 90%;
+    max-width: 400px;
+    overflow: hidden;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.modal-header h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.modal-close {
+    background: transparent;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-2);
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-close:hover {
+    background: var(--border);
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-body p {
+    margin-bottom: 1rem;
+    color: var(--text);
+    line-height: 1.5;
+}
+
+.modal-body p:last-child {
+    margin-bottom: 0;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border);
+}
+
+.modal-btn {
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.modal-btn.cancel {
+    background: transparent;
+    color: var(--text);
+}
+
+.modal-btn.cancel:hover {
+    background: var(--border);
+}
+
+.modal-btn.confirm {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+}
+
+.modal-btn.confirm:hover {
+    background: #1976d2;
+    border-color: #1976d2;
 }
 
 /* Container */
@@ -443,6 +586,16 @@ canvas {
         gap: 1rem;
     }
     
+    .header-nav {
+        order: -1;
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .back-btn {
+        margin-right: 0;
+    }
+    
     .grid {
         grid-template-columns: 1fr;
         gap: 1rem;
@@ -473,4 +626,24 @@ canvas {
     .chart-controls {
         align-self: flex-end;
     }
+    
+    .modal-content {
+        width: 95%;
+    }
+    
+    .modal-footer {
+        flex-direction: column;
+    }
+    
+    .modal-btn {
+        width: 100%;
+    }
+}
+
+/* Only apply to notif + badge icons, NOT buzzer */
+.notif-icon img,
+.badge img {
+    width: 18px;
+    height: 18px;
+    vertical-align: middle;
 }
