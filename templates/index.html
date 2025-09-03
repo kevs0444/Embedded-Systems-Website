@@ -3,10 +3,54 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Main Homepage</title>
+    <title>System Shapers - Embedded Systems</title>
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
-<body>
-    <h1>Welcome to Embedded Systems Website</h1>
-    <a href="{{ url_for('act1_page') }}">Go to Act 1</a>
+<body data-theme="light">
+    <header>
+        <div class="header-content">
+            <div class="brand">
+                <h1>
+                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iY3VycmVudENvbG9yIiB3aWR0aD0iMjgiIGhlaWdodD0iMjgiPjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgZD0iTTUgMTBhMSAxIDAgMDExLTFoMTJhMSAxIDAgMDExIDF2NGExIDEgMCAwMS0xIDFINmExIDEgMCAwMS0xLTF2LTR6TTMgN2ExIDEgMCAwMTEtMWgxNmExIDEgMCAwMTEgMXYxMGExIDEgMCAwMS0xIDFINGExIDEgMCAwMS0xLTFWN3ptMiAydjhIMTlWOUg1eiIgY2xpcC1ydWxlPSJldmVub2RkIi8+PC9zdmc+" alt="CPU Icon" style="width:28px;height:28px;vertical-align:middle;">
+                    System Shapers
+                </h1>
+                <small>Embedded Systems Laboratory</small>
+            </div>
+            <button class="theme-btn" id="themeBtn">🌙</button>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="hero">
+            <h1>Embedded Systems Dashboard</h1>
+            <p>Monitor and control your embedded systems projects through our interactive web interface</p>
+        </div>
+        
+        <div class="activities-grid">
+            <div class="activity-card">
+                <div class="activity-icon">
+                    <img src="/static/icons/thermometer.png" alt="Temperature Icon">
+                </div>
+                <h2>Activity 1</h2>
+                <p>Monitor temperature and humidity data from DHT11 sensor with real-time charts and alert system</p>
+                <a href="/act1" class="activity-btn">Launch Activity</a>
+            </div>
+            
+            <div class="activity-card">
+                <div class="activity-icon">
+                    <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iY3VycmVudENvbG9yIiB3aWR0aD0iNTAiIGhlaWdodD0iNTAiPjxwYXRoIGZpbGwtcnVsZT0iZXZlbm9kZCIgZD0iTTEyIDJhMS41IDEuNSAwIDAxMS4wNi40NGw2LjUgNi41QTEuNSAxLjUgMCAwMTIwIDkuNVYyMGEyIDIgMCAwMS0yIDJINGEyIDIgMCAwMS0yLTJWNmEyIDIgMCAwMTItMmg4LjV6TTE1IDE4aDJ2LTJoLTJ2MnpNMTEgMThIMnYyaDl2LTJ6TTE4IDExaDJ2LTJoLTJ2MnpNNiAxNEg0di0yaDJ2MnpNNiA2SDR2NGgydi00ek02IDEwSDR2Mmgydi0yek0xMCA2SDh2NGgydi00ek0xMCAxMEg4djJoMnYtMnpNMTAgMTRIOHYyaDJ2LTJ6TTE0IDZoLTR2NGg0di00ek0xNCAxMGgtNHYyaDR2LTJ6IiBjbGlwLXJ1bGU9ImV2ZW5vZGQiLz48L3N2Zz4=" alt="Placeholder Icon">
+                </div>
+                <h2>Activity 2</h2>
+                <p>Coming soon - Additional embedded systems projects and monitoring tools</p>
+                <a href="#" class="activity-btn" style="background: var(--text-2); cursor: not-allowed;">Coming Soon</a>
+            </div>
+        </div>
+    </main>
+
+    <div class="footer">
+        <p>© 2025 System Shapers | Embedded Systems Laboratory</p>
+    </div>
+
+    <script src="/static/js/script.js"></script>
 </body>
 </html>

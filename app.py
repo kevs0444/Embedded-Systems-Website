@@ -1,4 +1,4 @@
-from flask import Flask, render_template, jsonify, send_from_directory
+from flask import Flask, render_template, jsonify, send_from_directory, redirect, url_for
 import os
 import signal
 import act1
@@ -46,6 +46,20 @@ def history_data():
 @app.route("/clear-history")
 def clear_history():
     return jsonify(act1.clear_history())
+
+@app.route("/stop_act1")
+def stop_act1():
+    global act1_running
+    if act1_running:
+        act1.cleanup()
+        act1_running = False
+        print("Act1 monitoring stopped and GPIO cleaned up")
+    return redirect(url_for('index'))
+
+# Serve static files
+@app.route('/static/<path:path>')
+def send_static(path):
+    return send_from_directory('static', path)
 
 # Only cleanup on actual server shutdown
 @app.teardown_appcontext
