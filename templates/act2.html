@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity 2 - Ultrasonic Sensor</title>
+    <link rel="stylesheet" href="/static/css/style.css">   <!-- Global styles -->
+    <link rel="stylesheet" href="/static/css/act2.css">    <!-- Act2-specific styles -->
+</head>
+<body data-theme="light">
+    <header>
+        <div class="header-content">
+            <div class="brand">
+                <h1>
+                    <img src="/static/icons/ultrasonic.png" alt="Ultrasonic Icon" style="width:28px;height:28px;vertical-align:middle;">
+                    Activity 2 - Ultrasonic
+                </h1>
+                <small>Distance Monitoring System</small>
+            </div>
+            <a href="/" class="back-btn">⬅ Back</a>
+            <button class="theme-btn" id="themeBtn">🌙</button>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="hero">
+            <h1>Ultrasonic Distance Sensor</h1>
+            <p>Monitor real-time distance measurements using the HC-SR04 ultrasonic sensor.</p>
+        </div>
+
+        <div class="card act2-card">
+            <h2>Live Data</h2>
+            <p>Status: <span id="status">🔵 Initializing...</span></p>
+            <p>Distance: <span id="distance">--</span> cm</p>
+            <p>Time: <span id="time">--</span></p>
+        </div>
+    </main>
+
+    <div class="footer">
+        <p>© 2025 System Shapers | Embedded Systems Laboratory</p>
+    </div>
+
+    <script src="/static/js/act2.js"></script>
+    <script src="/static/js/script.js"></script>
+</body>
+</html>

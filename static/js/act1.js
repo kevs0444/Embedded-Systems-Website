@@ -413,7 +413,6 @@ function clearHistoricalData() {
     }
 }
 
-// Refresh historical data every 5 minutes
 setInterval(() => {
     loadHistoricalData();
-}, 300000);
+}, 60000);

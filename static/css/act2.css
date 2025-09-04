@@ -1,0 +1,42 @@
+/* Act2-specific styling */
+
+/* Give the Act2 card a different color accent */
+.act2-card {
+    border: 2px solid var(--primary);
+    background: var(--background-2);
+    color: var(--text-1);
+    box-shadow: 0 4px 12px rgba(0, 128, 255, 0.2);
+    transition: transform 0.2s ease;
+}
+
+.act2-card:hover {
+    transform: translateY(-5px);
+}
+
+/* Distance text styling */
+#distance {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--primary);
+}
+
+/* Status indicator */
+#status {
+    font-weight: 600;
+}
+
+#status::before {
+    content: "📡 ";
+}
+
+/* Responsive tweaks */
+@media (max-width: 600px) {
+    .act2-card {
+        font-size: 0.9rem;
+        padding: 1rem;
+    }
+
+    #distance {
+        font-size: 1.5rem;
+    }
+}
