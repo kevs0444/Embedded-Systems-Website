@@ -217,8 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
     setInterval(fetchData, 5000);
 
     document.getElementById('clearData').onclick = clearHistoricalData;
-    
-    // Add event listeners for back button and modal
+
     const backButton = document.querySelector('.back-btn');
     if (backButton) {
         backButton.addEventListener('click', function(e) {
@@ -226,34 +225,30 @@ document.addEventListener('DOMContentLoaded', () => {
             showBackModal();
         });
     }
-    
-    // Modal event listeners
+
     document.getElementById('modalClose').addEventListener('click', hideBackModal);
     document.getElementById('modalCancel').addEventListener('click', hideBackModal);
     document.getElementById('modalConfirm').addEventListener('click', handleBackConfirmation);
-    
-    // Close modal when clicking outside
+
     document.getElementById('backModal').addEventListener('click', function(e) {
-        if (e.target === this) {
-            hideBackModal();
-        }
+        if (e.target === this) hideBackModal();
     });
 });
 
 function initTheme() {
     const themeBtn = document.getElementById('themeBtn');
     const saved = localStorage.getItem('theme') || 'light';
-    
+
     document.body.setAttribute('data-theme', saved);
     themeBtn.textContent = saved === 'light' ? '🌙' : '☀️';
-    
+
     themeBtn.onclick = () => {
         const current = document.body.getAttribute('data-theme');
         const newTheme = current === 'light' ? 'dark' : 'light';
         document.body.setAttribute('data-theme', newTheme);
         themeBtn.textContent = newTheme === 'light' ? '🌙' : '☀️';
         localStorage.setItem('theme', newTheme);
-        
+
         setTimeout(() => {
             if (realChart) realChart.draw();
             if (histChart) histChart.draw();
@@ -264,13 +259,13 @@ function initTheme() {
 function initCharts() {
     const realCanvas = document.getElementById('realChart');
     const histCanvas = document.getElementById('histChart');
-    
+
     realChart = new SimpleChart(realCanvas, { maxPoints: 20 });
     histChart = new SimpleChart(histCanvas, { maxPoints: 500 });
-    
+
     realChart.setTooltip(document.getElementById('realTooltip'));
     histChart.setTooltip(document.getElementById('histTooltip'));
-    
+
     document.getElementById('toggleReal').onclick = () => realChart.toggle();
     document.getElementById('toggleHist').onclick = () => histChart.toggle();
 }
@@ -299,9 +294,9 @@ async function fetchData() {
     try {
         const response = await fetch('/sensor');
         const data = await response.json();
-        
+
         updateStatus(true);
-        
+
         if (data.error || data.temperature === null || data.humidity === null) {
             updateUI('--', '--', 'OFF');
             showErrorNotification();
@@ -310,7 +305,7 @@ async function fetchData() {
             updateRealTimeChart(data.temperature, data.humidity);
             hideErrorNotification();
         }
-        
+
         updateTime();
     } catch (error) {
         console.error('Fetch error:', error);
@@ -322,7 +317,7 @@ async function fetchData() {
 function updateUI(temp, hum, buzzer) {
     document.getElementById('temp').textContent = temp;
     document.getElementById('humidity').textContent = hum;
-    
+
     const tempBadge = document.getElementById('tempBadge');
     const t = parseFloat(temp);
     if (t >= 38) {
@@ -338,13 +333,13 @@ function updateUI(temp, hum, buzzer) {
         tempBadge.className = 'badge';
         tempBadge.textContent = '--';
     }
-    
+
     const buzzerIcon = document.getElementById('buzzer');
     const buzzerText = document.getElementById('buzzerText');
     const buzzerStatusIcon = document.getElementById('buzzerStatusIcon');
     const buzzerBadge = document.getElementById('buzzerBadge');
     const isAlert = buzzer === 'ON' || t >= 38;
-    
+
     if (isAlert) {
         buzzerIcon.className = 'buzzer-icon buzzer-active';
         buzzerText.textContent = 'ALERT';
@@ -366,7 +361,6 @@ function updateRealTimeChart(temp, hum) {
         minute: '2-digit',
         second: '2-digit'
     });
-    
     realChart.addData(time, [parseFloat(temp), parseFloat(hum)]);
 }
 

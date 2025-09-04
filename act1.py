@@ -2,7 +2,6 @@ import time
 import threading
 import atexit
 import signal
-import sys
 import os
 import json
 from datetime import datetime, timedelta
@@ -22,8 +21,8 @@ humidity_readings_buffer = []
 buffer_start_time = None
 
 # Historical data
-HIST_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "historicaldata")
-HIST_FILE = os.path.join(HIST_DIR, "historical_data.json")
+HIST_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "historicaldataact1")
+HIST_FILE = os.path.join(HIST_DIR, "historical_data_act1.json")
 os.makedirs(HIST_DIR, exist_ok=True)
 
 historical_data = {"labels": [], "temp": [], "hum": []}
@@ -35,37 +34,29 @@ def initialize_hardware():
     global dht_device, buzzer
     try:
         print("Initializing hardware...")
-        time.sleep(1)  # Initial delay
-        
-        # Initialize DHT11 sensor
+        time.sleep(1)
+
         dht_device = adafruit_dht.DHT11(board.D4)
         print("DHT sensor initialized")
-        
-        # Initialize buzzer
+
         buzzer = digitalio.DigitalInOut(board.D17)
         buzzer.direction = digitalio.Direction.OUTPUT
         buzzer.value = False
         print("Buzzer initialized")
-        
-        # Wait for sensor to stabilize
+
         time.sleep(2)
-        
-        # Test reading
-        success = False
+
         for _ in range(3):
             try:
                 test_temp = dht_device.temperature
                 test_hum = dht_device.humidity
                 if test_temp is not None and test_hum is not None:
                     print(f"Initial reading - Temp: {test_temp}°C, Humidity: {test_hum}%")
-                    success = True
-                    break
+                    return True
             except:
                 time.sleep(2)
                 continue
-        
-        return success
-            
+        return False
     except Exception as e:
         print(f"Error initializing hardware: {str(e)}")
         cleanup(silent=True)
@@ -75,12 +66,12 @@ def cleanup(silent=False):
     global dht_device, buzzer
     if not silent:
         print("Cleaning up GPIO...")
-    
+
     stop_event.set()
-    
+
     if temp_readings_buffer and humidity_readings_buffer:
         save_averaged_data()
-    
+
     if buzzer is not None:
         try:
             buzzer.value = False
@@ -88,15 +79,15 @@ def cleanup(silent=False):
         except:
             pass
         buzzer = None
-            
+
     if dht_device is not None:
         try:
             dht_device.exit()
         except:
             pass
         dht_device = None
-    
-    time.sleep(1)  # Wait for GPIO to settle
+
+    time.sleep(1)
 
 def load_historical_data():
     global historical_data, last_historical_save
@@ -106,9 +97,7 @@ def load_historical_data():
                 data = json.load(f)
             if "data" in data:
                 loaded_data = data["data"]
-                # Verify data integrity
                 if all(key in loaded_data for key in ["labels", "temp", "hum"]):
-                    # Ensure all arrays have same length
                     min_length = min(len(loaded_data["labels"]), 
                                    len(loaded_data["temp"]), 
                                    len(loaded_data["hum"]))
@@ -146,7 +135,6 @@ def add_to_buffer(temperature, humidity):
         buffer_start_time = now
     temp_readings_buffer.append(temperature)
     humidity_readings_buffer.append(humidity)
-    # Save if buffer gets too large or time interval reached
     if len(temp_readings_buffer) >= 60 or (now - buffer_start_time).total_seconds() >= HISTORICAL_INTERVAL:
         save_averaged_data()
 
@@ -154,34 +142,25 @@ def save_averaged_data():
     global buffer_start_time, last_historical_save
     if not temp_readings_buffer or not humidity_readings_buffer:
         return False
-    
+
     avg_temp = sum(temp_readings_buffer) / len(temp_readings_buffer)
     avg_humidity = sum(humidity_readings_buffer) / len(humidity_readings_buffer)
-    
-    # Ensure proper timestamp format
-    if buffer_start_time:
-        timestamp = buffer_start_time.strftime("%b %d %I:%M %p")
-    else:
-        timestamp = datetime.now().strftime("%b %d %I:%M %p")
-    
+
+    timestamp = buffer_start_time.strftime("%b %d %I:%M %p") if buffer_start_time else datetime.now().strftime("%b %d %I:%M %p")
     historical_data["labels"].append(timestamp)
     historical_data["temp"].append(round(avg_temp, 1))
     historical_data["hum"].append(round(avg_humidity, 1))
-    
-    # Keep arrays in sync
-    min_length = min(len(historical_data["labels"]), 
-                    len(historical_data["temp"]), 
-                    len(historical_data["hum"]))
-    
+
+    min_length = min(len(historical_data["labels"]), len(historical_data["temp"]), len(historical_data["hum"]))
     historical_data["labels"] = historical_data["labels"][-min_length:]
     historical_data["temp"] = historical_data["temp"][-min_length:]
     historical_data["hum"] = historical_data["hum"][-min_length:]
-    
+
     if len(historical_data["labels"]) > MAX_HISTORICAL_POINTS:
         historical_data["labels"] = historical_data["labels"][-MAX_HISTORICAL_POINTS:]
         historical_data["temp"] = historical_data["temp"][-MAX_HISTORICAL_POINTS:]
         historical_data["hum"] = historical_data["hum"][-MAX_HISTORICAL_POINTS:]
-    
+
     last_historical_save = datetime.now()
     save_historical_data()
     temp_readings_buffer.clear()
@@ -196,7 +175,7 @@ def sensor_loop():
             if dht_device is not None:
                 temperature = dht_device.temperature
                 humidity = dht_device.humidity
-                
+
                 if temperature is not None and humidity is not None:
                     now = datetime.now().strftime("%Y-%m-%d %I:%M:%S %p")
                     sensor_data.update({
@@ -205,67 +184,64 @@ def sensor_loop():
                         "time": now,
                         "error": False
                     })
-                    
+
                     add_to_buffer(temperature, humidity)
                     error_count = 0
-                    
-                    if temperature >= 38 and buzzer is not None:
-                        buzzer.value = True
-                        sensor_data["buzzer"] = "ON"
-                    else:
-                        if buzzer is not None:
+
+                    # Buzzer logic
+                    if buzzer is not None:
+                        if temperature >= 38:
+                            beep_delay = max(0.1, 1.0 - 0.35 * (temperature - 38))
+                            buzzer.value = True
+                            time.sleep(0.1)
                             buzzer.value = False
-                        sensor_data["buzzer"] = "OFF"
-                
+                            time.sleep(beep_delay)
+                            sensor_data["buzzer"] = "ON"
+                            continue
+                        else:
+                            buzzer.value = False
+                            sensor_data["buzzer"] = "OFF"
+
         except RuntimeError as e:
             print(f"DHT Read Error: {e}")
             error_count += 1
             sensor_data["error"] = True
             time.sleep(2)
-            
         except Exception as e:
             print(f"Unexpected error: {e}")
             error_count += 1
             sensor_data["error"] = True
-            
+
         if error_count >= 3:
             print("Too many errors, reinitializing...")
             initialize_hardware()
             error_count = 0
-            
+
         time.sleep(5)
 
 def cleanup_thread():
     while not stop_event.is_set():
-        time.sleep(3600)  # Run every hour
+        time.sleep(3600)
         if not stop_event.is_set():
             clean_old_data()
 
-# Add this function before cleanup_thread()
 def clean_old_data():
-    """Clean up historical data older than 24 hours"""
     if not historical_data["labels"]:
         return
-        
     now = datetime.now()
     cutoff_time = now - timedelta(hours=24)
     keep_from = 0
-    
     for i, label in enumerate(historical_data["labels"]):
         try:
-            # Try parsing with different time formats
             try:
                 point_time = datetime.strptime(f"{now.year} {label}", "%Y %b %d %I:%M %p")
             except ValueError:
                 point_time = datetime.strptime(f"{now.year} {label}", "%Y %b %d %H:%M")
-                
             if point_time >= cutoff_time:
                 keep_from = i
                 break
-        except Exception as e:
-            print(f"Error parsing timestamp: {label} - {e}")
+        except:
             continue
-    
     if keep_from > 0:
         historical_data["labels"] = historical_data["labels"][keep_from:]
         historical_data["temp"] = historical_data["temp"][keep_from:]
@@ -286,19 +262,26 @@ def get_sensor_data():
     return sensor_data
 
 def get_history():
-    print(f"Sending {len(historical_data['labels'])} historical data points")
     return historical_data
 
 def clear_history():
     global historical_data, last_historical_save, buffer_start_time
-    historical_data = {"labels": [], "temp": [], "hum": []}
-    last_historical_save = None
-    temp_readings_buffer.clear()
-    humidity_readings_buffer.clear()
-    buffer_start_time = None
-    if os.path.exists(HIST_FILE):
-        os.remove(HIST_FILE)
-    return {"status": "success", "message": "Historical data cleared"}
+    try:
+        historical_data = {"labels": [], "temp": [], "hum": []}
+        last_historical_save = None
+        buffer_start_time = None
+        temp_readings_buffer.clear()
+        humidity_readings_buffer.clear()
+        if os.path.exists(HIST_FILE):
+            try:
+                os.remove(HIST_FILE)
+                print("Historical data file deleted.")
+            except Exception as e:
+                print(f"Error deleting file: {e}")
+                return {"status": "error", "message": str(e)}
+        return {"status": "success", "message": "Historical data cleared"}
+    except Exception as e:
+        return {"status": "error", "message": f"Error clearing data: {str(e)}"}
 
 # Register cleanup handlers
 atexit.register(cleanup)

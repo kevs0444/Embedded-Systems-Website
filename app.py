@@ -82,4 +82,4 @@ if __name__ == "__main__":
         print(f"Error running server: {e}")
         if act1_running:
             act1.cleanup()
-            act1_running = False
+            act1_running = False    
