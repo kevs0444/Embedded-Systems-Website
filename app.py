@@ -1,6 +1,8 @@
 from flask import Flask, render_template, jsonify, send_from_directory, redirect, url_for, request
 import os
 import signal
+import threading
+import time
 import act1, act2
 
 app = Flask(__name__)
@@ -9,7 +11,29 @@ app = Flask(__name__)
 act1_running = False
 act2_running = False
 
-# Signal handler for graceful shutdown
+# -------------------- ACTIVITY 2 Globals --------------------
+act2_latest = {"distance": None, "time": None, "error": None}
+act2_history = []
+
+# -------------------- ACT2 Background Loop --------------------
+def act2_loop():
+    global act2_latest, act2_history, act2_running
+    while act2_running:  # only run if activity is active
+        try:
+            data = act2.get_sensor_data()
+            data["time"] = time.strftime("%H:%M:%S")
+
+            act2_latest = data
+            act2_history.append(data)
+        except Exception as e:
+            act2_latest = {
+                "distance": None,
+                "time": time.strftime("%H:%M:%S"),
+                "error": str(e)
+            }
+        time.sleep(2)  # 🔁 get distance every 2 seconds
+
+# -------------------- Signal handler --------------------
 def signal_handler(signum, frame):
     print("\nCleaning up and shutting down...")
     global act1_running, act2_running
@@ -68,13 +92,26 @@ def act2_page():
         if success:
             act2_running = True
             print("Act2 ultrasonic started successfully")
+
+            # start background thread
+            t = threading.Thread(target=act2_loop, daemon=True)
+            t.start()
         else:
             print("Failed to start Act2")
     return render_template("act2.html")
 
 @app.route("/sensor2")
 def sensor2_data():
-    return jsonify(act2.get_sensor_data())
+    return jsonify(act2_latest)
+
+@app.route("/history2")
+def history2_data():
+    return jsonify(act2_history)
+
+@app.route("/clear_history2", methods=["POST"])
+def clear_history2():
+    act2_history.clear()
+    return jsonify({"status": "cleared"})
 
 @app.route("/stop_act2")
 def stop_act2():

@@ -38,7 +38,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV=/home/SystemShapers/embedded_systems/Act1/venv
+VIRTUAL_ENV=/home/systemshapers/Embedded-Systems-Website/venv
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

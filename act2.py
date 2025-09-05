@@ -1,67 +1,68 @@
 import time
-import board
-import digitalio
+from gpiozero import DistanceSensor, Buzzer
+from luma.core.interface.serial import i2c
+from luma.oled.device import ssd1306
+from PIL import Image, ImageDraw, ImageFont
 
-# Setup pins
-trigger = digitalio.DigitalInOut(board.D23)
-trigger.direction = digitalio.Direction.OUTPUT
+# -------------------- Ultrasonic Setup --------------------
+sensor = DistanceSensor(echo=24, trigger=23, max_distance=2)  # GPIO24 = Echo, GPIO23 = Trigger
 
-echo = digitalio.DigitalInOut(board.D24)
-echo.direction = digitalio.Direction.INPUT
+# -------------------- Buzzer Setup --------------------
+buzzer = Buzzer(17)  # GPIO17
 
-buzzer = digitalio.DigitalInOut(board.D18)
-buzzer.direction = digitalio.Direction.OUTPUT
+# -------------------- OLED Setup (SSH1106) --------------------
+serial = i2c(port=1, address=0x3C)
+oled = ssd1306(serial, width=128, height=64)
+font = ImageFont.load_default()
 
+def display_distance(distance):
+    image = Image.new("1", (oled.width, oled.height))
+    draw = ImageDraw.Draw(image)
+    draw.rectangle((0, 0, oled.width, oled.height), outline=0, fill=0)
+    draw.text((0, 0), f"Distance: {distance:.1f} cm", font=font, fill=255)
+    oled.display(image)
+
+# -------------------- Data History --------------------
 history = []
 
-def get_distance():
-    trigger.value = True
-    time.sleep(0.00001)
-    trigger.value = False
+# -------------------- Beep Function --------------------
+def beep():
+    buzzer.on()
+    time.sleep(0.2)
+    buzzer.off()
 
-    timeout = time.monotonic_ns() + 100_000_000  # 100ms timeout
-
-    while not echo.value:
-        if time.monotonic_ns() > timeout:
-            raise RuntimeError("Timeout waiting for echo high")
-    start = time.monotonic_ns()
-
-    timeout = time.monotonic_ns() + 100_000_000
-    while echo.value:
-        if time.monotonic_ns() > timeout:
-            raise RuntimeError("Timeout waiting for echo low")
-    stop = time.monotonic_ns()
-
-    elapsed = (stop - start) / 1_000_000_000
-    return (elapsed * 34300) / 2
-
+# -------------------- Main Sensor Data --------------------
 def get_sensor_data():
     try:
-        distance = get_distance()
+        distance = sensor.distance * 100  # convert to cm
 
-        # ✅ Beep when distance is >= 12 cm
-        buzzer.value = distance >= 12
+        if distance >= 12:
+            beep()
+            display_distance(distance)
 
-        data = {"distance": round(distance, 2)}
+        data = {"distance": round(distance, 2), "time": time.strftime("%H:%M:%S")}
         history.append(data)
 
-        # ⏲️ Wait 2 seconds before next reading
         time.sleep(2)
-
         return data
     except Exception as e:
-        return {"error": str(e)}
+        return {"error": str(e), "time": time.strftime("%H:%M:%S")}
 
+# -------------------- History Functions --------------------
 def get_history():
     return history
 
 def clear_history():
     history.clear()
+    oled.clear()
     return {"status": "cleared"}
 
+# -------------------- Control --------------------
 def start_act2():
-    buzzer.value = False
+    buzzer.off()
+    oled.clear()
     return True
 
 def cleanup():
-    buzzer.value = False
+    buzzer.off()
+    oled.clear()

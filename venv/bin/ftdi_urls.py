@@ -1,4 +1,4 @@
-#!/home/SystemShapers/embedded_systems/Act1/venv/bin/python3
+#!/home/systemshapers/Embedded-Systems-Website/venv/bin/python
 
 # Copyright (c) 2019-2024, Emmanuel Blot <emmanuel.blot@free.fr>
 # All rights reserved.

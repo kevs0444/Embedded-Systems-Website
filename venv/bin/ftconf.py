@@ -1,4 +1,4 @@
-#!/home/SystemShapers/embedded_systems/Act1/venv/bin/python3
+#!/home/systemshapers/Embedded-Systems-Website/venv/bin/python
 
 """Simple FTDI EEPROM configurator.
 """

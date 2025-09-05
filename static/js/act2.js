@@ -19,7 +19,5 @@ function fetchUltrasonicData() {
         });
 }
 
-// static/js/act2.js
-setInterval(fetchUltrasonicData, 300);  // fetch every 300ms
 fetchUltrasonicData();
 
