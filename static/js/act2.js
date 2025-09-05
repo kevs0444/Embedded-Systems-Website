@@ -14,12 +14,10 @@ function fetchUltrasonicData() {
             document.getElementById("status").textContent = "⚠️ Connection error";
         })
         .finally(() => {
-            setTimeout(fetchUltrasonicData, 200);  // fetch again after 200ms
+            // fetch again after 2 seconds
+            setTimeout(fetchUltrasonicData, 2000);
         });
 }
-
-fetchUltrasonicData();
-
 
 // static/js/act2.js
 setInterval(fetchUltrasonicData, 300);  // fetch every 300ms
