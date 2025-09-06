@@ -72,6 +72,13 @@ header {
     font-size: 0.8rem;
 }
 
+/* Add this to your style.css file */
+.theme-icon {
+    width: 24px;
+    height: 24px;
+    transition: all 0.3s ease;
+}
+
 .theme-btn {
     background: var(--bg);
     border: 1px solid var(--border);
@@ -79,7 +86,9 @@ header {
     width: 40px;
     height: 40px;
     cursor: pointer;
-    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: all 0.2s;
 }
 
@@ -644,8 +653,8 @@ canvas {
 /* Only apply to notif + badge icons, NOT buzzer */
 .notif-icon img,
 .badge img {
-    width: 18px;
-    height: 18px;
+    width: 40px;
+    height: 40px;
     vertical-align: middle;
 }
 

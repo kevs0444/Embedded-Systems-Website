@@ -42,7 +42,7 @@ class SimpleChart {
         this.draw();
     }
 
-    draw() {
+   draw() {
         if (this.hidden) return;
         const ctx = this.ctx;
         const width = this.canvas.width / (window.devicePixelRatio || 1);
@@ -55,32 +55,44 @@ class SimpleChart {
         const chartWidth = width - padding * 2;
         const chartHeight = height - padding * 2;
 
-        // Fixed Y-axis for distance
-        const yAxisLabels = [0, 5, 10, 15, 20];
-        const min = yAxisLabels[0];
-        const max = yAxisLabels[yAxisLabels.length - 1];
-        const range = max - min || 1;
+        // ------------------- Dynamic Y-axis -------------------
+        const ds = this.data.datasets[0];
+        const validData = ds.data.filter(v => v != null);
+        const dataMin = Math.min(...validData, 0);
+        const dataMax = Math.max(...validData, 20); // default max 20
+
+        // Compute nice Y-axis step
+        let step = 5; 
+        let range = dataMax - dataMin;
+        if (range > 20) step = Math.ceil(range / 5 / 5) * 5; // adjust step dynamically
+        const min = Math.floor(dataMin / step) * step;
+        const max = Math.ceil(dataMax / step) * step;
+        
+        // Create Y-axis labels
+        const yAxisLabels = [];
+        for (let y = min; y <= max; y += step) yAxisLabels.push(y);
+
+        const totalRange = max - min || 1;
         const stepX = chartWidth / (this.data.labels.length - 1 || 1);
 
-        // Grid + Y labels
+        // ------------------- Grid + Y labels -------------------
         ctx.strokeStyle = '#ccc';
         ctx.lineWidth = 0.5;
         ctx.fillStyle = '#666';
         ctx.font = '10px sans-serif';
         yAxisLabels.forEach(yVal => {
-            const y = padding + chartHeight - ((yVal - min) / range) * chartHeight;
+            const y = padding + chartHeight - ((yVal - min) / totalRange) * chartHeight;
             ctx.beginPath(); ctx.moveTo(padding, y); ctx.lineTo(width - padding, y); ctx.stroke();
             ctx.fillText(yVal.toFixed(0), 2, y + 3);
         });
 
-        // Draw dataset (distance only)
-        const ds = this.data.datasets[0];
+        // ------------------- Draw dataset -------------------
         ctx.strokeStyle = this.colors[0];
         ctx.lineWidth = 2; ctx.beginPath();
         ds.data.forEach((v, i) => {
             if (v == null) return;
             const x = padding + i * stepX;
-            const y = padding + chartHeight - ((v - min) / range) * chartHeight;
+            const y = padding + chartHeight - ((v - min) / totalRange) * chartHeight;
             i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
         });
         ctx.stroke();
@@ -89,7 +101,7 @@ class SimpleChart {
         ds.data.forEach((v, i) => {
             if (v == null) return;
             const x = padding + i * stepX;
-            const y = padding + chartHeight - ((v - min) / range) * chartHeight;
+            const y = padding + chartHeight - ((v - min) / totalRange) * chartHeight;
             ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill();
         });
     }
@@ -186,17 +198,36 @@ let errorNotificationShown = false;
 // ------------------------ Theme ------------------------
 function initTheme() {
     const themeBtn = document.getElementById('themeBtn');
+    const themeIcon = document.getElementById('themeIcon');
     const saved = localStorage.getItem('theme') || 'light';
 
     document.body.setAttribute('data-theme', saved);
-    themeBtn.textContent = saved === 'light' ? '🌙' : '☀️';
+    
+    // Set initial icon
+    if (saved === 'light') {
+        themeIcon.src = '/static/icons/dark-mode.png';
+        themeIcon.alt = 'Switch to dark mode';
+    } else {
+        themeIcon.src = '/static/icons/light-mode.png';
+        themeIcon.alt = 'Switch to light mode';
+    }
 
     themeBtn.onclick = () => {
         const current = document.body.getAttribute('data-theme');
         const newTheme = current === 'light' ? 'dark' : 'light';
         document.body.setAttribute('data-theme', newTheme);
-        themeBtn.textContent = newTheme === 'light' ? '🌙' : '☀️';
+        
+        // Update the icon
+        if (newTheme === 'light') {
+            themeIcon.src = '/static/icons/dark-mode.png';
+            themeIcon.alt = 'Switch to dark mode';
+        } else {
+            themeIcon.src = '/static/icons/light-mode.png';
+            themeIcon.alt = 'Switch to light mode';
+        }
+        
         localStorage.setItem('theme', newTheme);
+        
         setTimeout(() => {
             if (realChart) realChart.draw();
             if (histChart) histChart.draw();

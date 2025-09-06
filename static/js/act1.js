@@ -237,16 +237,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function initTheme() {
     const themeBtn = document.getElementById('themeBtn');
+    const themeIcon = document.getElementById('themeIcon');
     const saved = localStorage.getItem('theme') || 'light';
 
     document.body.setAttribute('data-theme', saved);
-    themeBtn.textContent = saved === 'light' ? '🌙' : '☀️';
+    
+    // Set initial icon based on saved theme
+    if (saved === 'light') {
+        themeIcon.src = '/static/icons/dark-mode.png';
+        themeIcon.alt = 'Switch to dark mode';
+    } else {
+        themeIcon.src = '/static/icons/light-mode.png';
+        themeIcon.alt = 'Switch to light mode';
+    }
 
     themeBtn.onclick = () => {
         const current = document.body.getAttribute('data-theme');
         const newTheme = current === 'light' ? 'dark' : 'light';
         document.body.setAttribute('data-theme', newTheme);
-        themeBtn.textContent = newTheme === 'light' ? '🌙' : '☀️';
+        
+        // Update the icon
+        if (newTheme === 'light') {
+            themeIcon.src = '/static/icons/dark-mode.png';
+            themeIcon.alt = 'Switch to dark mode';
+        } else {
+            themeIcon.src = '/static/icons/light-mode.png';
+            themeIcon.alt = 'Switch to light mode';
+        }
+        
         localStorage.setItem('theme', newTheme);
 
         setTimeout(() => {

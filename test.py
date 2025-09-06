@@ -1,44 +1,66 @@
 import time
-from luma.core.interface.serial import i2c
-from luma.oled.device import sh1106
-from luma.core.render import canvas
-from PIL import ImageFont, ImageDraw, Image
+import board
+import digitalio
 
-# OLED setup
-serial = i2c(port=1, address=0x3C)
-oled = sh1106(serial)
-oled.clear()
+# -------------------- Pins --------------------
+TRIG_PIN = board.D27   # GPIO27 (Physical Pin 13)
+ECHO_PIN = board.D22   # GPIO22 (Physical Pin 15)
 
-# Font setup
-font_path = "/home/SystemShapers/Downloads/DejaVuSans-Bold.ttf"
-font = ImageFont.truetype(font_path, 10)  # Adjust font size for readability
+# -------------------- Setup --------------------
+trigger = digitalio.DigitalInOut(TRIG_PIN)
+trigger.direction = digitalio.Direction.OUTPUT
+trigger.value = False
 
-# Text lines
-lines = [
-    "Mar Kevin Alcantara",
-    "Bernie Berongoy",
-    "Reymart Llona",
-    "Paul Andrew Relevo",
-    "Yuri Lorenz Sagadraca",
-    "#6 | PCEIT-03-601P"
-]
+echo = digitalio.DigitalInOut(ECHO_PIN)
+echo.direction = digitalio.Direction.INPUT
 
-# Prepare drawing
-WIDTH, HEIGHT = oled.width, oled.height
-image = Image.new("1", (WIDTH, HEIGHT), 0)
-draw = ImageDraw.Draw(image)
+print("Ultrasonic Sensor 2 Test (TRIG=GPIO27, ECHO=GPIO22)")
+time.sleep(2)
 
-# Scroll animation
-text_y = HEIGHT
-while text_y > -len(lines) * 12:  # Adjust spacing dynamically
-    draw.rectangle((0, 0, WIDTH, HEIGHT), outline=0, fill=0)  # Clear frame
-    y_offset = text_y
-    for line in lines:
-        draw.text((5, y_offset), line, font=font, fill=255)
-        y_offset += 12  # Line spacing
-    oled.display(image)  # Show frame
-    text_y -= 2          # Adjust scrolling speed
-    time.sleep(0.1)
+def get_distance():
+    # Send trigger pulse
+    trigger.value = False
+    time.sleep(0.0005)
 
-oled.clear()
-print("Scrolling text animation completed.")
+    trigger.value = True
+    time.sleep(0.00001)
+    trigger.value = False
+
+    # Wait for echo to go HIGH
+    timeout_start = time.time()
+    while not echo.value:
+        if time.time() - timeout_start > 0.1:
+            return None
+    pulse_start = time.time()
+
+    # Wait for echo to go LOW
+    timeout_start = time.time()
+    while echo.value:
+        if time.time() - timeout_start > 0.1:
+            return None
+    pulse_end = time.time()
+
+    # Calculate distance
+    pulse_duration = pulse_end - pulse_start
+    distance_cm = pulse_duration * 34300 / 2
+
+    if 2 <= distance_cm <= 400:
+        return round(distance_cm, 1)
+    return None
+
+try:
+    while True:
+        distance = get_distance()
+        if distance is not None:
+            print(f"Distance: {distance} cm")
+        else:
+            print("Out of range / timeout")
+        time.sleep(1)
+
+except KeyboardInterrupt:
+    print("Test stopped by user")
+
+finally:
+    trigger.deinit()
+    echo.deinit()
+    print("GPIO released")
