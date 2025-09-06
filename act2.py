@@ -1,62 +1,86 @@
 import time
 import threading
-from gpiozero import DistanceSensor, Buzzer
+import board
+import digitalio
 from luma.core.interface.serial import i2c
 from luma.oled.device import ssd1306
 from PIL import Image, ImageDraw, ImageFont
+import adafruit_dht
+from gpiozero import Buzzer
 
-# Global variables
-sensor = None
+# -------------------- Pins --------------------
+TRIG_PIN = board.D23  # Ultrasonic Trigger
+ECHO_PIN = board.D24  # Ultrasonic Echo
+BUZZER_PIN = 17       # GPIO17
+DHT_PIN = board.D4    # DHT11 Data
+
+# -------------------- Global Variables --------------------
+trigger = None
+echo = None
 buzzer_obj = None
 oled = None
 serial = None
+dht_device = None
 stop_event = threading.Event()
 history = []
-latest_data = {"distance": None, "time": None, "error": None}
+latest_data = {"distance": None, "temperature": None, "humidity": None, "time": None, "error": None}
+consecutive_fail_count = 0
+MAX_CONSECUTIVE_FAILS = 3
 
+# -------------------- Hardware Initialization --------------------
 def initialize_hardware():
-    global sensor, buzzer_obj, oled, serial
-    
+    global trigger, echo, buzzer_obj, oled, serial, dht_device
+
     try:
-        # Initialize ultrasonic sensor
-        sensor = DistanceSensor(echo=24, trigger=23)
-        
-        # Initialize buzzer
-        buzzer_obj = Buzzer(17)
+        # Ultrasonic pins
+        trigger = digitalio.DigitalInOut(TRIG_PIN)
+        trigger.direction = digitalio.Direction.OUTPUT
+        trigger.value = False
+
+        echo = digitalio.DigitalInOut(ECHO_PIN)
+        echo.direction = digitalio.Direction.INPUT
+
+        # Buzzer
+        buzzer_obj = Buzzer(BUZZER_PIN)
         buzzer_obj.off()
-        
-        # Initialize OLED
+
+        # OLED
         serial = i2c(port=1, address=0x3C)
         oled = ssd1306(serial, width=128, height=64)
         oled.clear()
-        
+
+        # DHT11
+        dht_device = adafruit_dht.DHT11(DHT_PIN)
+
         print("Act2 hardware initialized successfully")
         return True
     except Exception as e:
         print(f"Error initializing Act2 hardware: {e}")
         return False
 
-def display_distance(distance):
+# -------------------- Display Function --------------------
+def display_readings(distance, temperature, humidity):
     if oled is None:
         return
-        
+
     try:
         font = ImageFont.load_default()
         image = Image.new("1", (oled.width, oled.height))
         draw = ImageDraw.Draw(image)
-        
-        # Draw only the text (no rectangle)
-        text = f"Distance: {distance:.1f} cm"
-        bbox = draw.textbbox((0, 0), text, font=font)
-        text_width = bbox[2] - bbox[0]
-        text_height = bbox[3] - bbox[1]
-        x = (oled.width - text_width) // 2
-        y = (oled.height - text_height) // 2
-        draw.text((x, y), text, font=font, fill=255)
+
+        dist_text = f"Dist: {distance:.1f} cm"
+        temp_text = f"Temp: {temperature:.1f}°C"
+        hum_text = f"Hum: {humidity:.1f}%"
+
+        draw.text((10, 10), dist_text, font=font, fill=255)
+        draw.text((10, 30), temp_text, font=font, fill=255)
+        draw.text((10, 50), hum_text, font=font, fill=255)
+
         oled.display(image)
     except Exception as e:
-        print(f"Error displaying distance: {e}")
+        print(f"Error displaying readings: {e}")
 
+# -------------------- Buzzer Function --------------------
 def beep():
     if buzzer_obj:
         try:
@@ -66,34 +90,119 @@ def beep():
         except Exception as e:
             print(f"Error with buzzer: {e}")
 
-def sensor_loop():
-    global latest_data
-    
-    while not stop_event.is_set():
-        try:
-            if sensor:
-                distance = sensor.distance * 100  # convert to cm
-                
-                # Add 1cm if distance is 11cm
-                if 10.9 <= distance <= 11.1:  # Small range to account for sensor fluctuations
-                    distance += 1
-                    print("Added 1cm to distance measurement (was 11cm)")
-                
-                if distance >= 12:
-                    beep()
-                    display_distance(distance)
-                
-                data = {"distance": round(distance, 2), "time": time.strftime("%H:%M:%S"), "error": None}
-                latest_data = data
-                history.append(data)
-            else:
-                latest_data = {"distance": None, "time": time.strftime("%H:%M:%S"), "error": "Sensor not initialized"}
-                
-        except Exception as e:
-            latest_data = {"distance": None, "time": time.strftime("%H:%M:%S"), "error": str(e)}
-        
-        time.sleep(2)
+# -------------------- Ultrasonic Reading --------------------
+def get_distance():
+    if trigger is None or echo is None:
+        return None
 
+    try:
+        # Send trigger pulse
+        trigger.value = False
+        time.sleep(0.0002)  # Wait 200μs
+        trigger.value = True
+        time.sleep(0.00001)  # 10μs pulse
+        trigger.value = False
+
+        # Wait for echo to go high
+        timeout = time.time() + 0.1  # 100ms timeout
+        while not echo.value:
+            if time.time() > timeout:
+                return None
+            time.sleep(0.00001)  # 10μs delay
+
+        # Measure echo pulse duration
+        start_time = time.time()
+        timeout = time.time() + 0.1  # 100ms timeout
+        while echo.value:
+            if time.time() > timeout:
+                return None
+            time.sleep(0.00001)  # 10μs delay
+        end_time = time.time()
+
+        # Calculate distance in cm
+        pulse_duration = end_time - start_time
+        distance_cm = (pulse_duration * 34300) / 2  # Speed of sound is 343 m/s
+        
+        # Validate distance (HC-SR04 range is 2cm-400cm)
+        if 2 <= distance_cm <= 400:
+            return round(distance_cm, 2)
+        else:
+            return None
+            
+    except Exception as e:
+        print(f"Error reading ultrasonic sensor: {e}")
+        return None
+
+# -------------------- Sensor Loop --------------------
+def sensor_loop():
+    global latest_data, consecutive_fail_count
+    interval = 2  # seconds
+
+    while not stop_event.is_set():
+        start_loop = time.time()  # Track start time of this cycle
+
+        try:
+            distance = get_distance()
+            
+            temperature = None
+            humidity = None
+            if dht_device:
+                try:
+                    temperature = dht_device.temperature
+                    humidity = dht_device.humidity
+                except RuntimeError:
+                    pass
+                except Exception as e:
+                    print(f"DHT11 unexpected error: {e}")
+
+            # Handle consecutive ultrasonic failures
+            if distance is None:
+                consecutive_fail_count += 1
+                if consecutive_fail_count >= MAX_CONSECUTIVE_FAILS:
+                    error_msg = "Ultrasonic sensor error"
+                else:
+                    error_msg = None
+            else:
+                consecutive_fail_count = 0
+                error_msg = None
+
+            data = {
+                "distance": distance,
+                "temperature": temperature,
+                "humidity": humidity,
+                "time": time.strftime("%H:%M:%S"),
+                "error": error_msg
+            }
+
+            latest_data = data
+            history.append(data)
+
+            # Display and beep if distance is valid and >=12
+            if distance is not None and distance >= 12:
+                if temperature is not None and humidity is not None:
+                    display_readings(distance, temperature, humidity)
+                beep()
+            else:
+                if buzzer_obj and buzzer_obj.is_active:
+                    buzzer_obj.off()
+                if oled:
+                    oled.clear()
+
+        except Exception as e:
+            latest_data = {
+                "distance": None,
+                "temperature": None,
+                "humidity": None,
+                "time": time.strftime("%H:%M:%S"),
+                "error": str(e)
+            }
+
+        # Wait remaining time to maintain 2-second interval
+        elapsed = time.time() - start_loop
+        if elapsed < interval:
+            time.sleep(interval - elapsed)
+
+# -------------------- Helper Functions --------------------
 def get_sensor_data():
     return latest_data
 
@@ -106,31 +215,26 @@ def clear_history():
         oled.clear()
     return {"status": "cleared"}
 
+# -------------------- Start Act2 --------------------
 def start_act2():
     global stop_event
-    
-    # Clean up first
-    cleanup()
-    
-    # Initialize hardware
+
+    cleanup()  # Clean previous resources
+
     if initialize_hardware():
         stop_event.clear()
-        
-        # Start sensor loop in a thread
         thread = threading.Thread(target=sensor_loop, daemon=True)
         thread.start()
-        
         return True
     return False
 
+# -------------------- Cleanup --------------------
 def cleanup():
-    global sensor, buzzer_obj, oled, serial, stop_event
-    
-    # Signal thread to stop
+    global trigger, echo, buzzer_obj, oled, serial, dht_device, stop_event
+
     stop_event.set()
-    time.sleep(0.5)  # Give thread time to exit
-    
-    # Clean up hardware
+    time.sleep(0.5)
+
     try:
         if buzzer_obj:
             buzzer_obj.off()
@@ -138,26 +242,36 @@ def cleanup():
             buzzer_obj = None
     except Exception as e:
         print(f"Error cleaning up buzzer: {e}")
-    
+
     try:
-        if sensor:
-            sensor.close()
-            sensor = None
+        if trigger:
+            trigger.deinit()
+            trigger = None
+        if echo:
+            echo.deinit()
+            echo = None
     except Exception as e:
-        print(f"Error cleaning up sensor: {e}")
-    
+        print(f"Error cleaning up ultrasonic: {e}")
+
+    try:
+        if dht_device:
+            dht_device.exit()
+            dht_device = None
+    except Exception as e:
+        print(f"Error cleaning up DHT11: {e}")
+
     try:
         if oled:
             oled.clear()
             oled = None
     except Exception as e:
         print(f"Error cleaning up OLED: {e}")
-    
+
     try:
         if serial:
             serial.cleanup()
             serial = None
     except Exception as e:
         print(f"Error cleaning up serial: {e}")
-    
+
     print("Act2 resources cleaned up")

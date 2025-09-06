@@ -1,10 +1,7 @@
-/* Act2-specific styling */
-
-/* Give the Act2 card a different color accent */
+/* Activity 2 specific styles */
 .act2-card {
-    border: 2px solid var(--primary);
-    background: var(--background-2);
-    color: var(--text-1);
+    border: 2px solid var(--accent);
+    background: var(--card);
     box-shadow: 0 4px 12px rgba(0, 128, 255, 0.2);
     transition: transform 0.2s ease;
 }
@@ -13,20 +10,37 @@
     transform: translateY(-5px);
 }
 
-/* Distance text styling */
 #distance {
     font-size: 2rem;
     font-weight: bold;
-    color: var(--primary);
+    color: var(--accent);
 }
 
-/* Status indicator */
-#status {
-    font-weight: 600;
+.distance-color {
+    background: #2196f3;
 }
 
-#status::before {
-    content: "📡 ";
+.temp-color {
+    background: #f44336;
+}
+
+.hum-color {
+    background: #4caf50;
+}
+
+/* Buzzer glow animation */
+.buzzer-icon.buzzer-active {
+    animation: buzzerGlow 1s infinite alternate;
+    filter: drop-shadow(0 0 5px #ff0000);
+}
+
+@keyframes buzzerGlow {
+    from {
+        filter: drop-shadow(0 0 5px #ff0000);
+    }
+    to {
+        filter: drop-shadow(0 0 15px #ff0000);
+    }
 }
 
 /* Responsive tweaks */
@@ -38,5 +52,18 @@
 
     #distance {
         font-size: 1.5rem;
+    }
+    
+    .buzzer-icon.buzzer-active {
+        animation: buzzerGlowMobile 1s infinite alternate;
+    }
+    
+    @keyframes buzzerGlowMobile {
+        from {
+            filter: drop-shadow(0 0 3px #ff0000);
+        }
+        to {
+            filter: drop-shadow(0 0 8px #ff0000);
+        }
     }
 }

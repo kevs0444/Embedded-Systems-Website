@@ -3,42 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Activity 2 - Ultrasonic Sensor</title>
+    <title>Activity 2 - Distance Sensor</title>
     <link rel="stylesheet" href="/static/css/style.css">   <!-- Global styles -->
     <link rel="stylesheet" href="/static/css/act2.css">    <!-- Act2-specific styles -->
 </head>
 <body data-theme="light">
+    <div class="status" id="status">🟢</div>
+    
+    <!-- Error Notification -->
+    <div class="notification error" id="errorNotif">
+        <div class="notif-content">
+            <span class="notif-icon">
+                <img src="/static/icons/warning.png" alt="Error Icon">
+            </span>
+            <div>
+                <div class="notif-title">Sensor Error</div>
+                <div class="notif-msg">Ultrasonic sensor is not responding</div>
+            </div>
+            <button class="notif-close" id="closeNotif">×</button>
+        </div>
+    </div>
+    
+    <!-- Back Confirmation Modal -->
+    <div class="modal" id="backModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Confirm Navigation</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to go back to the main menu?</p>
+                <p>This will stop the sensor monitoring and clean up GPIO resources.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn cancel" id="modalCancel">Cancel</button>
+                <button class="modal-btn confirm" id="modalConfirm">Yes, Go Back</button>
+            </div>
+        </div>
+    </div>
+    
     <header>
         <div class="header-content">
-            <div class="brand">
-                <h1>
-                    <img src="/static/icons/ultrasonic.png" alt="Ultrasonic Icon" style="width:28px;height:28px;vertical-align:middle;">
-                    Activity 2 - Ultrasonic
-                </h1>
-                <small>Distance Monitoring System</small>
+            <div class="header-nav">
+                <a href="#" class="back-btn">←</a>
+                <div class="brand">
+                    <h1>
+                        <img src="/static/icons/ultrasonic.png" alt="Ultrasonic Icon" style="width:28px;height:28px;vertical-align:middle;">
+                        Distance Sensor Dashboard
+                    </h1>
+                    <small>by System Shapers</small>
+                </div>
             </div>
-            <a href="/" class="back-btn">⬅ Back</a>
             <button class="theme-btn" id="themeBtn">🌙</button>
         </div>
     </header>
 
     <main class="container">
-        <div class="hero">
-            <h1>Ultrasonic Distance Sensor</h1>
-            <p>Monitor real-time distance measurements using the HC-SR04 ultrasonic sensor.</p>
+       <div class="grid">
+            <div class="card act2-card">
+                <h3>Distance</h3>
+                <div class="value" id="distance">--</div>
+                <div class="badge" id="distanceBadge">--</div>
+            </div>
+            
+            <div class="card act2-card">
+                <h3>Temperature</h3>
+                <div class="value" id="temperature">--</div>
+                <div class="badge" id="tempBadge">--</div>
+            </div>
+            
+            <div class="card act2-card">
+                <h3>Humidity</h3>
+                <div class="value" id="humidity">--</div>
+                <div class="badge" id="humBadge">--</div>
+            </div>
+            
+                        <!-- In the Status card section -->
+            <div class="card act2-card">
+                <h3>Status</h3>
+                <div class="alert-display">
+                    <div class="buzzer-icon" id="buzzer">
+                        <img src="/static/icons/buzzer.png" alt="Buzzer Icon">
+                    </div>
+                    <div class="badge" id="buzzerBadge">
+                        <span id="buzzerText">Standby</span>
+                        <img src="/static/icons/mute.png" alt="Mute Icon" id="buzzerStatusIcon">
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <div class="card act2-card">
-            <h2>Live Data</h2>
-            <p>Status: <span id="status">🔵 Initializing...</span></p>
-            <p>Distance: <span id="distance">--</span> cm</p>
-            <p>Time: <span id="time">--</span></p>
+        <div class="chart-container">
+            <div class="chart-section">
+                <div class="chart-header">
+                    <h3>Real-time Distance</h3>
+                    <button class="toggle-chart" id="toggleReal">📊 Toggle Chart</button>
+                </div>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color distance-color"></div>
+                        <span>Distance (cm)</span>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="realChart"></canvas>
+                    <div class="chart-tooltip" id="realTooltip"></div>
+                </div>
+            </div>
+
+            <div class="chart-section">
+                <div class="chart-header">
+                    <h3>Historical Data</h3>
+                    <div class="chart-controls">
+                        <button class="clear-data-btn" id="clearData">🗑️ Clear Data</button>
+                        <button class="toggle-chart" id="toggleHist">📊 Toggle Chart</button>
+                    </div>
+                </div>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color distance-color"></div>
+                        <span>Distance (cm)</span>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="histChart"></canvas>
+                    <div class="chart-tooltip" id="histTooltip"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Last update: <span id="time">--</span>
         </div>
     </main>
-
-    <div class="footer">
-        <p>© 2025 System Shapers | Embedded Systems Laboratory</p>
-    </div>
 
     <script src="/static/js/act2.js"></script>
     <script src="/static/js/script.js"></script>

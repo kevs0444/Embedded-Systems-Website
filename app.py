@@ -10,27 +10,8 @@ app = Flask(__name__)
 # Global variables to track if activities are running
 current_activity = None  # 'act1', 'act2', or None
 
-# -------------------- ACTIVITY 2 Globals --------------------
-act2_latest = {"distance": None, "time": None, "error": None}
-act2_history = []
-
 # -------------------- ACT2 Background Loop --------------------
-def act2_loop():
-    global act2_latest, act2_history, current_activity
-    while current_activity == 'act2':  # only run if activity 2 is active
-        try:
-            data = act2.get_sensor_data()
-            data["time"] = time.strftime("%H:%M:%S")
-
-            act2_latest = data
-            act2_history.append(data)
-        except Exception as e:
-            act2_latest = {
-                "distance": None,
-                "time": time.strftime("%H:%M:%S"),
-                "error": str(e)
-            }
-        time.sleep(2)  # 🔁 get distance every 2 seconds
+# REMOVED the act2_loop() function - it's not needed since act2.py has its own sensor_loop()
 
 # -------------------- Signal handler --------------------
 def signal_handler(signum, frame):
@@ -121,11 +102,28 @@ def act2_page():
 
 @app.route("/sensor2")
 def sensor2_data():
-    return jsonify(act2.get_sensor_data())
+    data = act2.get_sensor_data()
+    # Add buzzer status based on distance - match the frontend logic
+    if data["distance"] is not None and data["distance"] >= 12:
+        data["buzzer"] = "ON"
+    else:
+        data["buzzer"] = "OFF"
+    return jsonify(data)
 
 @app.route("/history2")
 def history2_data():
-    return jsonify(act2.get_history())
+    history = act2.get_history()
+    # Format history for all sensors
+    labels = [entry["time"] for entry in history]
+    distance = [entry["distance"] for entry in history]
+    temperature = [entry["temperature"] for entry in history]
+    humidity = [entry["humidity"] for entry in history]
+    return jsonify({
+        "labels": labels, 
+        "distance": distance,
+        "temperature": temperature,
+        "humidity": humidity
+    })
 
 @app.route("/clear_history2", methods=["POST"])
 def clear_history2():
