@@ -45,7 +45,7 @@
     <header>
         <div class="header-content">
             <div class="header-nav">
-                <a href="#" class="back-btn">←</a>
+                <a href="#" class="back-btn" id="backBtn">←</a>
                 <div class="brand">
                     <h1>
                         <img src="/static/icons/ultrasonic.png" alt="Ultrasonic Icon" style="width:28px;height:28px;vertical-align:middle;">
@@ -59,7 +59,7 @@
     </header>
 
     <main class="container">
-       <div class="grid">
+        <div class="grid">
             <div class="card act2-card">
                 <h3>Distance</h3>
                 <div class="value" id="distance">--</div>
@@ -78,7 +78,6 @@
                 <div class="badge" id="humBadge">--</div>
             </div>
             
-                        <!-- In the Status card section -->
             <div class="card act2-card">
                 <h3>Status</h3>
                 <div class="alert-display">
@@ -94,6 +93,7 @@
         </div>
 
         <div class="chart-container">
+            <!-- Real-time Distance Chart -->
             <div class="chart-section">
                 <div class="chart-header">
                     <h3>Real-time Distance</h3>
@@ -111,6 +111,7 @@
                 </div>
             </div>
 
+            <!-- Historical Distance Chart -->
             <div class="chart-section">
                 <div class="chart-header">
                     <h3>Historical Data</h3>
