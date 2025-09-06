@@ -39,31 +39,17 @@ def stop_current_activity():
     current_activity = None
 
 def save_act2_history():
-    """Append Act2 history (distance + time) to JSON file instead of overwriting."""
+    """Save Act2 history to JSON file without duplication."""
     try:
         if not os.path.exists(ACT2_HISTORY_DIR):
             os.makedirs(ACT2_HISTORY_DIR, exist_ok=True)
 
-        # Load existing history from file
-        existing_history = []
-        if os.path.exists(ACT2_HISTORY_FILE):
-            try:
-                with open(ACT2_HISTORY_FILE, "r") as f:
-                    existing_history = json.load(f)
-                    if not isinstance(existing_history, list):
-                        existing_history = []
-            except:
-                existing_history = []
-
-        # Merge with new history from act2
-        new_history = act2.get_history()
-        merged_history = existing_history + new_history
-
-        # Save back to file
+        # Just save the current in-memory history directly
+        current_history = act2.get_history()
         with open(ACT2_HISTORY_FILE, "w") as f:
-            json.dump(merged_history, f, indent=4)
+            json.dump(current_history, f, indent=4)
 
-        print(f"Act2 history appended & saved ({len(merged_history)} records)")
+        print(f"Act2 history saved ({len(current_history)} records)")
 
     except Exception as e:
         print(f"Error saving Act2 history: {e}")
