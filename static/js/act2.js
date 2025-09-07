@@ -8,6 +8,7 @@ class SimpleChart {
         this.padding = 40;
         this.hidden = false;
         this.tooltip = null;
+        this.chartId = options.chartId || 'chart'; // Add chart identifier
 
         this.canvas.addEventListener('mousemove', e => this.handleMouseMove(e));
         this.canvas.addEventListener('mouseleave', () => this.hideTooltip());
@@ -106,38 +107,87 @@ class SimpleChart {
         });
     }
 
-    handleMouseMove(e) {
-        if (!this.tooltip || !this.data.labels.length) return;
-        const rect = this.canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const chartWidth = this.canvas.width / (window.devicePixelRatio || 1) - this.padding * 2;
-        const stepX = chartWidth / (this.data.labels.length - 1 || 1);
-        const idx = Math.round((x - this.padding) / stepX);
-        if (idx >= 0 && idx < this.data.labels.length) this.showTooltip(e.clientX, e.clientY, idx);
-        else this.hideTooltip();
-    }
-
-    showTooltip(x, y, idx) {
+    showTooltip(x, y, index) {
         if (!this.tooltip) return;
-        const label = this.data.labels[idx];
-        const distance = this.data.datasets[0].data[idx];
+        const label = this.data.labels[index];
+        const distance = this.data.datasets[0].data[index];
+
+        // Format time based on chart type
+        let timeDisplay;
+        if (this.maxPoints === 20) { // Real-time chart
+            const time = new Date();
+            timeDisplay = time.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        } else {
+            timeDisplay = label;
+        }
 
         this.tooltip.innerHTML = `
-            <div>Time: ${label}</div>
-            <div>Distance: ${distance?.toFixed(1) ?? '--'} cm</div>
+            <div class="tooltip-time">${timeDisplay}</div>
+            <div class="tooltip-data">
+                <div class="tooltip-item">
+                    <div class="tooltip-color" style="background: #2196f3;"></div>
+                    <span>Distance: ${distance?.toFixed(1) || '--'} cm</span>
+                </div>
+            </div>
         `;
-        const tooltipRect = this.tooltip.getBoundingClientRect();
-        let left = x + 10, top = y - tooltipRect.height - 10;
-        if (left + tooltipRect.width > window.innerWidth) left = x - tooltipRect.width - 10;
-        if (top < 0) top = y + 10;
-        this.tooltip.style.left = left + 'px';
-        this.tooltip.style.top = top + 'px';
+
+        const rect = this.canvas.getBoundingClientRect();
+        const offsetX = x - rect.left;
+        const offsetY = y - rect.top;
+
+        // Position tooltip with offset from cursor
+        this.tooltip.style.left = `${offsetX + 15}px`;
+        this.tooltip.style.top = `${offsetY - 15}px`;
+
         this.tooltip.classList.add('show');
+    }
+
+    handleMouseMove(e) {
+        if (!this.tooltip || !this.data.labels.length) return;
+        
+        const rect = this.canvas.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+        
+        // Check if mouse is within chart area
+        if (mouseX < this.padding || mouseX > rect.width - this.padding ||
+            mouseY < this.padding || mouseY > rect.height - this.padding) {
+            this.hideTooltip();
+            return;
+        }
+        
+        const chartWidth = rect.width - (this.padding * 2);
+        const stepX = chartWidth / (this.data.labels.length - 1 || 1);
+        
+        // Find closest data point
+        const xPos = mouseX - this.padding;
+        const idx = Math.round(xPos / stepX);
+        
+        if (idx >= 0 && idx < this.data.labels.length) {
+            const value = this.data.datasets[0].data[idx];
+            if (value !== null) {
+                this.showTooltip(e.clientX, e.clientY, idx);
+            } else {
+                this.hideTooltip();
+            }
+        }
     }
 
     hideTooltip() { if (this.tooltip) this.tooltip.classList.remove('show'); }
 
-    toggle() { this.hidden = !this.hidden; this.canvas.style.display = this.hidden ? 'none' : 'block'; if (!this.hidden) this.draw(); }
+    toggle() {
+        this.hidden = !this.hidden;
+        this.canvas.style.display = this.hidden ? 'none' : 'block';
+        if (!this.hidden) this.draw();
+        
+        // Update toggle icon
+        const chartId = this.canvas.id.replace('Chart', '');
+        updateChartToggleIcon(chartId, this.hidden);
+    }
 
     setData(data) {
         this.data = data;
@@ -237,11 +287,17 @@ function initTheme() {
 
 // ------------------------ Initialize charts ------------------------
 function initCharts() {
-    realChart = new SimpleChart(document.getElementById('realChart'), { maxPoints: 20 });
+    realChart = new SimpleChart(document.getElementById('realChart'), {
+        maxPoints: 20,
+        chartId: 'realChart'
+    });
     realChart.setTooltip(document.getElementById('realTooltip'));
     document.getElementById('toggleReal').onclick = () => realChart.toggle();
 
-    histChart = new SimpleChart(document.getElementById('histChart'), { maxPoints: 500 });
+    histChart = new SimpleChart(document.getElementById('histChart'), {
+        maxPoints: 500,
+        chartId: 'histChart'
+    });
     histChart.setTooltip(document.getElementById('histTooltip'));
     document.getElementById('toggleHist').onclick = () => histChart.toggle();
 
@@ -274,7 +330,11 @@ async function fetchRealTimeData() {
     const lastDistance = realChart.data.datasets[0]?.data.slice(-1)[0] ?? 0;
     distance = !isNaN(distance) ? distance : lastDistance;
 
-    const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+    const time = new Date().toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true
+    });
 
     realChart.addData(time, { distance });
     histChart.addData(time, { distance });
@@ -364,17 +424,75 @@ function hideErrorNotification() {
 
 // ------------------------ Clear historical ------------------------
 function clearHistoricalData() {
-    if (confirm('Are you sure you want to clear all historical data?')) {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>
+                    <img src="/static/icons/warning.png" alt="Warning" style="width:24px;height:24px;vertical-align:middle;margin-right:8px;">
+                    Clear Historical Data
+                </h3>
+                <button class="modal-close">×</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to clear all historical data?</p>
+                <p>This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn cancel">Cancel</button>
+                <button class="modal-btn confirm">Clear Data</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+    modal.classList.add('show');
+
+    const closeModal = () => {
+        modal.classList.remove('show');
+        setTimeout(() => modal.remove(), 300);
+    };
+
+    modal.querySelector('.modal-close').onclick = closeModal;
+    modal.querySelector('.cancel').onclick = closeModal;
+    
+    modal.querySelector('.confirm').onclick = () => {
         fetch('/clear_history2', { method: 'POST' })
             .then(res => res.json())
             .then(data => {
                 if (data.status === 'ok') {
                     histChart.setData({ labels: [], datasets: [{ data: [] }] });
-                    alert('Historical data cleared!');
+                    alert('Historical data cleared successfully!');
                 } else {
                     alert('Error: ' + data.message);
                 }
+                closeModal();
             })
-            .catch(err => console.error(err));
+            .catch(err => {
+                console.error(err);
+                alert('Error clearing historical data');
+                closeModal();
+            });
+    };
+
+    modal.onclick = (e) => {
+        if (e.target === modal) closeModal();
+    };
+}
+
+// Add these functions after the existing code
+function updateChartToggleIcon(chartId, isHidden) {
+    const toggleBtn = document.getElementById(`toggle${chartId}`);
+    if (toggleBtn) {
+        const img = toggleBtn.querySelector('img') || document.createElement('img');
+        img.src = `/static/icons/${isHidden ? 'unhide' : 'hide'}.png`;
+        img.alt = isHidden ? 'Show chart' : 'Hide chart';
+        img.style.width = '20px';
+        img.style.height = '20px';
+        if (!toggleBtn.contains(img)) {
+            toggleBtn.innerHTML = '';
+            toggleBtn.appendChild(img);
+        }
     }
 }
