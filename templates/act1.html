@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -64,19 +64,19 @@
 
     <main class="container">
         <div class="grid">
-            <div class="card">
+            <div class="card accent-border">
                 <h3>Temperature</h3>
-                <div class="value" id="temp">--</div>
+                <div class="value" id="temp">-- °C</div>
                 <div class="badge" id="tempBadge">--</div>
             </div>
             
-            <div class="card">
+            <div class="card accent-border">
                 <h3>Humidity</h3>
-                <div class="value" id="humidity">--</div>
+                <div class="value" id="humidity">-- %</div>
                 <div class="badge ok">Normal</div>
             </div>
             
-            <div class="card">
+            <div class="card accent-border">
                 <h3>Alert Status</h3>
                 <div class="alert-display">
                     <div class="buzzer-icon" id="buzzer">
@@ -90,55 +90,39 @@
             </div>
         </div>
 
-        <div class="chart-container">
-            <div class="chart-section">
+                <!-- Main Charts Container -->
+        <div class="charts-container">
+            
+            <!-- Real-time Chart Container -->
+            <div class="chart-card accent-border">
                 <div class="chart-header">
-                    <h3>Real-time Data</h3>
-                    <button class="chart-btn" id="toggleReal" title="Toggle Chart">
-                        <img src="/static/icons/unhide.png" alt="Toggle Chart" id="toggleRealIcon">
-                    </button>
-                </div>
-                <div class="legend">
-                    <div class="legend-item">
-                        <div class="legend-color temp-color"></div>
-                        <span>Temperature (°C)</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color humidity-color"></div>
-                        <span>Humidity (%)</span>
+                    <h3>Real-time Monitoring</h3>
+                    <div class="chart-controls">
+                        <button class="toggle-chart" id="toggleReal" title="Toggle Chart">
+                            <img src="/static/icons/hide.png" alt="Toggle Chart">
+                        </button>
                     </div>
                 </div>
                 <div class="chart-wrapper">
                     <canvas id="realChart"></canvas>
-                    <div class="chart-tooltip" id="realTooltip"></div>
                 </div>
             </div>
 
-            <div class="chart-section">
+            <!-- 1-Minute Avg + Peak Chart Container -->
+            <div class="chart-card accent-border">
                 <div class="chart-header">
                     <h3>Historical Data</h3>
                     <div class="chart-controls">
-                        <button class="chart-btn clear-data-btn" id="clearData" title="Clear Data">
+                        <button class="toggle-chart" id="toggleHist" title="Toggle Chart">
+                            <img src="/static/icons/hide.png" alt="Toggle Chart">
+                        </button>
+                        <button class="clear-data-btn" id="clearData" title="Clear Data">
                             <img src="/static/icons/trash.png" alt="Clear Data">
                         </button>
-                        <button class="chart-btn" id="toggleHist" title="Toggle Chart">
-                            <img src="/static/icons/unhide.png" alt="Toggle Chart" id="toggleHistIcon">
-                        </button>
-                    </div>
-                </div>
-                <div class="legend">
-                    <div class="legend-item">
-                        <div class="legend-color temp-color"></div>
-                        <span>Temperature (°C)</span>
-                    </div>
-                    <div class="legend-item">
-                        <div class="legend-color humidity-color"></div>
-                        <span>Humidity (%)</span>
                     </div>
                 </div>
                 <div class="chart-wrapper">
-                    <canvas id="histChart"></canvas>
-                    <div class="chart-tooltip" id="histTooltip"></div>
+                    <canvas id="hist1Chart"></canvas>
                 </div>
             </div>
         </div>
@@ -148,6 +132,9 @@
         </div>
     </main>
 
+    <!-- Load Chart.js first -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Your custom script -->
     <script src="/static/js/act1.js"></script>
 </body>
 </html>

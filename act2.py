@@ -1,3 +1,4 @@
+
 import time
 import threading
 import board
@@ -160,9 +161,7 @@ def handle_buzzer(distance):
     if buzzer_obj:
         try:
             if distance is not None and distance >= 12:
-                buzzer_obj.on()
-                time.sleep(0.1)
-                buzzer_obj.off()
+                buzzer_obj.on()  # Keep buzzer on continuously
             else:
                 buzzer_obj.off()
         except:

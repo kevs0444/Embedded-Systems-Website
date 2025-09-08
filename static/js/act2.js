@@ -3,7 +3,7 @@ class SimpleChart {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         this.data = { labels: [], datasets: [] };
-        this.colors = ['#2196f3']; // only distance now
+        this.colors = options.colors || ['#2196f3']; // default to distance color
         this.maxPoints = options.maxPoints || 20;
         this.padding = 40;
         this.hidden = false;
@@ -30,10 +30,18 @@ class SimpleChart {
     setTooltip(el) { this.tooltip = el; }
 
     addData(label, values) {
-        if (!this.data.datasets[0]) this.data.datasets[0] = { data: [] };
+        if (this.data.datasets.length === 0) {
+            // Initialize datasets based on the number of values
+            for (let i = 0; i < values.length; i++) {
+                this.data.datasets.push({ data: [] });
+            }
+        }
 
         this.data.labels.push(label);
-        this.data.datasets[0].data.push(values.distance ?? null);
+        
+        values.forEach((value, i) => {
+            this.data.datasets[i].data.push(value);
+        });
 
         if (this.data.labels.length > this.maxPoints) {
             this.data.labels.shift();
@@ -57,10 +65,23 @@ class SimpleChart {
         const chartHeight = height - padding * 2;
 
         // ------------------- Dynamic Y-axis -------------------
-        const ds = this.data.datasets[0];
-        const validData = ds.data.filter(v => v != null);
-        const dataMin = Math.min(...validData, 0);
-        const dataMax = Math.max(...validData, 20); // default max 20
+        // Find min/max across all datasets
+        let dataMin = Infinity;
+        let dataMax = -Infinity;
+        
+        this.data.datasets.forEach(ds => {
+            const validData = ds.data.filter(v => v != null);
+            if (validData.length) {
+                dataMin = Math.min(dataMin, Math.min(...validData));
+                dataMax = Math.max(dataMax, Math.max(...validData));
+            }
+        });
+        
+        // If no valid data, use defaults
+        if (dataMin === Infinity) {
+            dataMin = 0;
+            dataMax = this.data.datasets.length > 1 ? 100 : 20; // Default to 20 for distance, 100 for temp/hum
+        }
 
         // Compute nice Y-axis step
         let step = 5; 
@@ -87,31 +108,42 @@ class SimpleChart {
             ctx.fillText(yVal.toFixed(0), 2, y + 3);
         });
 
-        // ------------------- Draw dataset -------------------
-        ctx.strokeStyle = this.colors[0];
-        ctx.lineWidth = 2; ctx.beginPath();
-        ds.data.forEach((v, i) => {
-            if (v == null) return;
-            const x = padding + i * stepX;
-            const y = padding + chartHeight - ((v - min) / totalRange) * chartHeight;
-            i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
-        });
-        ctx.stroke();
+        // ------------------- Draw datasets -------------------
+        this.data.datasets.forEach((ds, dsIndex) => {
+            ctx.strokeStyle = this.colors[dsIndex];
+            ctx.lineWidth = 2; 
+            ctx.beginPath();
+            
+            let firstPoint = true;
+            ds.data.forEach((v, i) => {
+                if (v == null) return;
+                const x = padding + i * stepX;
+                const y = padding + chartHeight - ((v - min) / totalRange) * chartHeight;
+                
+                if (firstPoint) {
+                    ctx.moveTo(x, y);
+                    firstPoint = false;
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            ctx.stroke();
 
-        ctx.fillStyle = this.colors[0];
-        ds.data.forEach((v, i) => {
-            if (v == null) return;
-            const x = padding + i * stepX;
-            const y = padding + chartHeight - ((v - min) / totalRange) * chartHeight;
-            ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill();
+            // Draw points
+            ctx.fillStyle = this.colors[dsIndex];
+            ds.data.forEach((v, i) => {
+                if (v == null) return;
+                const x = padding + i * stepX;
+                const y = padding + chartHeight - ((v - min) / totalRange) * chartHeight;
+                ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill();
+            });
         });
     }
 
     showTooltip(x, y, index) {
         if (!this.tooltip) return;
         const label = this.data.labels[index];
-        const distance = this.data.datasets[0].data[index];
-
+        
         // Format time based on chart type
         let timeDisplay;
         if (this.maxPoints === 20) { // Real-time chart
@@ -125,15 +157,36 @@ class SimpleChart {
             timeDisplay = label;
         }
 
-        this.tooltip.innerHTML = `
-            <div class="tooltip-time">${timeDisplay}</div>
-            <div class="tooltip-data">
+        // Build tooltip content based on chart type
+        let tooltipContent = `<div class="tooltip-time">${timeDisplay}</div><div class="tooltip-data">`;
+        
+        if (this.data.datasets.length === 1) {
+            // Distance chart
+            const distance = this.data.datasets[0].data[index];
+            tooltipContent += `
                 <div class="tooltip-item">
                     <div class="tooltip-color" style="background: #2196f3;"></div>
                     <span>Distance: ${distance?.toFixed(1) || '--'} cm</span>
                 </div>
-            </div>
-        `;
+            `;
+        } else {
+            // Temperature & Humidity chart
+            const temp = this.data.datasets[0].data[index];
+            const humidity = this.data.datasets[1].data[index];
+            tooltipContent += `
+                <div class="tooltip-item">
+                    <div class="tooltip-color" style="background: #2196f3;"></div>
+                    <span>Temperature: ${temp?.toFixed(1) || '--'}°C</span>
+                </div>
+                <div class="tooltip-item">
+                    <div class="tooltip-color" style="background: #4caf50;"></div>
+                    <span>Humidity: ${humidity?.toFixed(1) || '--'}%</span>
+                </div>
+            `;
+        }
+        
+        tooltipContent += '</div>';
+        this.tooltip.innerHTML = tooltipContent;
 
         const rect = this.canvas.getBoundingClientRect();
         const offsetX = x - rect.left;
@@ -168,8 +221,9 @@ class SimpleChart {
         const idx = Math.round(xPos / stepX);
         
         if (idx >= 0 && idx < this.data.labels.length) {
-            const value = this.data.datasets[0].data[idx];
-            if (value !== null) {
+            // Check if any dataset has data at this index
+            const hasData = this.data.datasets.some(ds => ds.data[idx] !== null);
+            if (hasData) {
                 this.showTooltip(e.clientX, e.clientY, idx);
             } else {
                 this.hideTooltip();
@@ -242,7 +296,7 @@ function initModalHandlers() {
 }
 
 // ------------------------ Global vars ------------------------
-let realChart, histChart;
+let realChart, histChart, tempHumChart;
 let errorNotificationShown = false;
 
 // ------------------------ Theme ------------------------
@@ -281,6 +335,7 @@ function initTheme() {
         setTimeout(() => {
             if (realChart) realChart.draw();
             if (histChart) histChart.draw();
+            if (tempHumChart) tempHumChart.draw();
         }, 100);
     };
 }
@@ -293,6 +348,14 @@ function initCharts() {
     });
     realChart.setTooltip(document.getElementById('realTooltip'));
     document.getElementById('toggleReal').onclick = () => realChart.toggle();
+
+    tempHumChart = new SimpleChart(document.getElementById('tempHumChart'), {
+        maxPoints: 20,
+        chartId: 'tempHumChart',
+        colors: ['#2196f3', '#4caf50'] // Blue for temp, Green for humidity
+    });
+    tempHumChart.setTooltip(document.getElementById('tempHumTooltip'));
+    document.getElementById('toggleTempHum').onclick = () => tempHumChart.toggle();
 
     histChart = new SimpleChart(document.getElementById('histChart'), {
         maxPoints: 500,
@@ -336,8 +399,12 @@ async function fetchRealTimeData() {
         hour12: true
     });
 
-    realChart.addData(time, { distance });
-    histChart.addData(time, { distance });
+    realChart.addData(time, [distance]);
+    
+    // Add data to temperature & humidity chart
+    if (!isNaN(temperature) && !isNaN(humidity)) {
+        tempHumChart.addData(time, [temperature, humidity]);
+    }
 
     updateCards(distance, temperature, humidity, buzzer);
     document.getElementById('time').textContent = time;

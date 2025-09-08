@@ -10,22 +10,30 @@
     transform: translateY(-5px);
 }
 
-#distance {
+#distance1, #distance2 {
     font-size: 2rem;
     font-weight: bold;
     color: var(--accent);
 }
 
-.distance-color {
+.distance1-color {
     background: #2196f3;
 }
 
-.temp-color {
-    background: #f44336;
+.distance2-color {
+    background: #ff9800;
+}
+
+.temp-color { 
+    background: #2196f3; 
 }
 
 .hum-color {
     background: #4caf50;
+}
+
+.humidity-color { 
+    background: #4caf50; 
 }
 
 /* Buzzer glow animation */
@@ -50,7 +58,7 @@
         padding: 1rem;
     }
 
-    #distance {
+    #distance1, #distance2 {
         font-size: 1.5rem;
     }
     
@@ -111,7 +119,6 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: var(--accent);
 }
 
 /* Dynamic arrow positioning will be handled by JavaScript */
@@ -127,4 +134,8 @@
     left: 50%;
     transform: translateX(-50%);
     border-bottom-color: var(--tooltip-border);
+}
+
+.chart-section:not(:last-child) {
+    margin-bottom: 2rem;
 }

@@ -1,4 +1,6 @@
-/* Activity 1 specific styles */
+/* ================================
+   Activity 1 specific styles
+   ================================ */
 #temp {
     color: #2196f3;
 }
@@ -13,4 +15,163 @@
 
 .humidity-color { 
     background: #4caf50; 
+}
+
+/* Blue border styles for cards */
+.card.accent-border {
+    border: var(--accent-border);
+    box-shadow: var(--shadow-lg);
+}
+
+/* ================================
+   Main charts container - MODERNIZED
+   ================================ */
+.charts-container {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    width: 95%;
+    max-width: 1200px;
+    margin: 30px auto;
+}
+
+/* Individual chart cards - MODERNIZED */
+.chart-card {
+    border-radius: 20px;
+    padding: 25px;
+    background: var(--card-bg, transparent);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    min-height: 420px;
+    backdrop-filter: blur(10px);
+    border: 2px solid var(--accent); /* Blue border for visibility */
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.chart-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+[data-theme="dark"] .chart-header {
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.chart-header h3 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+.chart-controls {
+    display: flex;
+    gap: 12px;
+}
+
+.chart-wrapper {
+    flex: 1;
+    position: relative;
+    height: 350px;
+    width: 100%;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+canvas {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 12px;
+}
+
+/* Modern chart styling */
+.chartjs-render-monitor {
+    background: var(--chart-bg, rgba(255, 255, 255, 0.7));
+    border-radius: 12px;
+    padding: 15px;
+}
+
+[data-theme="dark"] .chartjs-render-monitor {
+    background: rgba(30, 30, 40, 0.7);
+}
+
+/* Theme-aware backgrounds */
+[data-theme="light"] .chart-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    --chart-bg: rgba(255, 255, 255, 0.7);
+}
+
+[data-theme="dark"] .chart-card {
+    background: linear-gradient(135deg, rgba(40, 40, 55, 0.9) 0%, rgba(30, 30, 40, 0.9) 100%);
+    --chart-bg: rgba(30, 30, 40, 0.7);
+}
+
+/* ================================
+   Button hover effects - MODERNIZED
+   ================================ */
+.clear-data-btn, .toggle-chart {
+    padding: 10px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.05);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .clear-data-btn, 
+[data-theme="dark"] .toggle-chart {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.clear-data-btn:hover, .toggle-chart:hover {
+    transform: scale(1.15);
+    background: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] .clear-data-btn:hover, 
+[data-theme="dark"] .toggle-chart:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.clear-data-btn:hover {
+    box-shadow: 0 2px 8px rgba(244, 67, 54, 0.4);
+}
+
+.toggle-chart:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="dark"] .toggle-chart:hover {
+    box-shadow: 0 2px 8px rgba(255, 255, 255, 0.15);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .charts-container {
+        width: 100%;
+        gap: 20px;
+    }
+    
+    .chart-card {
+        min-height: 350px;
+        padding: 20px;
+    }
+    
+    .chart-wrapper {
+        height: 280px;
+    }
+    
+    .chart-header h3 {
+        font-size: 1.2rem;
+    }
 }

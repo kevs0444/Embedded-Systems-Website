@@ -6,6 +6,7 @@
     <title>Activity 2 - Distance Sensor</title>
     <link rel="stylesheet" href="/static/css/style.css">   <!-- Global styles -->
     <link rel="stylesheet" href="/static/css/act2.css">    <!-- Act2-specific styles -->
+    <link rel="stylesheet" href="/static/css/act1.css">    <!-- Act1-specific styles for temp/humid chart -->
 </head>
 <body data-theme="light">
     <div class="status" id="status">🟢</div>
@@ -112,6 +113,30 @@
                 <div class="chart-wrapper">
                     <canvas id="realChart"></canvas>
                     <div class="chart-tooltip" id="realTooltip"></div>
+                </div>
+            </div>
+
+            <!-- Temperature & Humidity Chart -->
+            <div class="chart-section">
+                <div class="chart-header">
+                    <h3>Temperature & Humidity</h3>
+                    <button class="toggle-chart" id="toggleTempHum">
+                        <img src="/static/icons/hide.png" alt="Hide chart" style="width:20px;height:20px;">
+                    </button>
+                </div>
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color temp-color"></div>
+                        <span>Temperature (°C)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color humidity-color"></div>
+                        <span>Humidity (%)</span>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="tempHumChart"></canvas>
+                    <div class="chart-tooltip" id="tempHumTooltip"></div>
                 </div>
             </div>
 

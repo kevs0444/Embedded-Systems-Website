@@ -11,6 +11,7 @@
     --danger: #f44336;
     --shadow: 0 2px 8px rgba(0,0,0,0.1);
     --shadow-lg: 0 4px 16px rgba(0,0,0,0.15);
+    --accent-border: 2px solid #2196f3;
 }
 
 [data-theme="dark"] {
@@ -21,6 +22,7 @@
     --border: #404040;
     --shadow: 0 2px 8px rgba(0,0,0,0.3);
     --shadow-lg: 0 4px 16px rgba(0,0,0,0.5);
+    --accent-border: 2px solid #64b5f6;
 }
 
 /* Reset */
@@ -468,11 +470,23 @@ header {
     background: transparent;
     border: 1px solid var(--danger);
     border-radius: 4px;
-    padding: 0.3rem 0.8rem;
+    padding: 0.3rem 0.6rem;
     cursor: pointer;
     font-size: 0.8rem;
     color: var(--danger);
     transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.clear-data-btn:hover {
+    background: rgba(244, 67, 54, 0.1);
+}
+
+.clear-data-btn img {
+    width: 14px;
+    height: 14px;
 }
 
 .clear-data-btn:hover {
@@ -508,14 +522,22 @@ header {
     background: transparent;
     border: 1px solid var(--border);
     border-radius: 4px;
-    padding: 0.3rem 0.6rem;
+    padding: 0.3rem 0.5rem;
     cursor: pointer;
     font-size: 0.8rem;
     transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
 }
 
 .toggle-chart:hover {
     background: var(--bg);
+}
+
+.toggle-chart img {
+    width: 14px;
+    height: 14px;
 }
 
 .chart-wrapper {
