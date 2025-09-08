@@ -283,6 +283,7 @@ def add_to_buffer(temperature, humidity):
     if elapsed >= HISTORICAL_INTERVAL:
         save_averaged_data()
 
+# -------------------- Buffering & aggregation --------------------
 def save_averaged_data():
     """Compute avg & peak from buffers, append to historical_data and persist to disk."""
     global buffer_start_time, last_historical_save, historical_data
@@ -302,8 +303,8 @@ def save_averaged_data():
         peak_temp = max(temp_readings_buffer)
         peak_humidity = max(humidity_readings_buffer)
 
-        # use timestamp of buffer start (human friendly)
-        timestamp = buffer_start_time.strftime("%I:%M %p") if buffer_start_time else datetime.now().strftime("%I:%M %p")
+        # Use custom format for timestamps: dd/mm hh:mm AM/PM
+        timestamp = buffer_start_time.strftime("%d/%m/%Y %I:%M %p") if buffer_start_time else datetime.now().strftime("%d/%m/%Y %I:%M %p")
         historical_data["labels"].append(timestamp)
         historical_data["avg_temp"].append(round(avg_temp, 1))
         historical_data["avg_hum"].append(round(avg_humidity, 1))
@@ -321,7 +322,7 @@ def save_averaged_data():
         print(f"Error computing/saving averaged data: {e}")
         return False
     finally:
-        # reset buffers regardless (so we don't re-save the same samples)
+        # reset buffers
         temp_readings_buffer.clear()
         humidity_readings_buffer.clear()
         buffer_start_time = None
@@ -403,17 +404,16 @@ def clean_old_data():
     keep_from = 0
     for i, label in enumerate(historical_data["labels"]):
         try:
-            # label format is H:M or maybe 'Mon DD HH:MM AM' - try several formats
-            # We'll try to parse as "%Y %H:%M" using current year if possible
-            try:
-                point_time = datetime.strptime(f"{now.year} {label}", "%Y %H:%M")
-            except Exception:
-                # fallback: just keep the recent half if parsing fails
-                point_time = now
+            # Parse ISO format timestamp
+            point_time = datetime.fromisoformat(label)
             if point_time >= cutoff_time:
                 keep_from = i
                 break
         except Exception:
+            # If parsing fails, try to keep recent data
+            if i > len(historical_data["labels"]) // 2:
+                keep_from = i
+                break
             continue
 
     if keep_from > 0:

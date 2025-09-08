@@ -87,7 +87,9 @@ def sensor_data():
 
 @app.route("/history")
 def history():
-    return jsonify(act1.get_history())
+    # Return the historical data in the expected format
+    hist_data = act1.get_history()
+    return jsonify(hist_data)
 
 @app.route("/clear_history", methods=["POST"])
 def clear_history():

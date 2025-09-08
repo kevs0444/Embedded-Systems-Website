@@ -1,11 +1,12 @@
 // ==========================
-// act1.js - Full file
+// act1.js - Toggle Removed
 // ==========================
 
 // ==========================
 // Global Vars
 // ==========================
-let realChart, hist1Chart;
+let realChart = null;
+let hist1Chart = null;
 let errorNotificationShown = false;
 
 // ==========================
@@ -55,13 +56,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const modalClose = document.getElementById('modalClose');
-    if (modalClose) modalClose.addEventListener('click', hideBackModal);
     const modalCancel = document.getElementById('modalCancel');
-    if (modalCancel) modalCancel.addEventListener('click', hideBackModal);
     const modalConfirm = document.getElementById('modalConfirm');
-    if (modalConfirm) modalConfirm.addEventListener('click', handleBackConfirmation);
 
-    // Error notification close handled in initNotifications()
+    if (modalClose) modalClose.addEventListener('click', hideBackModal);
+    if (modalCancel) modalCancel.addEventListener('click', hideBackModal);
+    if (modalConfirm) modalConfirm.addEventListener('click', handleBackConfirmation);
 });
 
 // ==========================
@@ -71,7 +71,6 @@ function initTheme() {
     const themeBtn = document.getElementById('themeBtn');
     const themeIcon = document.getElementById('themeIcon');
     const saved = localStorage.getItem('theme') || 'light';
-
     document.body.setAttribute('data-theme', saved);
 
     if (themeIcon) {
@@ -85,6 +84,7 @@ function initTheme() {
             const next = current === 'light' ? 'dark' : 'light';
             document.body.setAttribute('data-theme', next);
             localStorage.setItem('theme', next);
+
             if (themeIcon) {
                 themeIcon.src = next === 'light' ? '/static/icons/dark-mode.png' : '/static/icons/light-mode.png';
                 themeIcon.alt = next === 'light' ? 'Switch to dark mode' : 'Switch to light mode';
@@ -129,30 +129,10 @@ function initCharts() {
             }
         },
         scales: {
-            x: {
-                title: { display: true, text: 'Time' },
-                ticks: {
-                    autoSkip: true,
-                    maxTicksLimit: 12,
-                    callback: function(value) {
-                        const label = this.getLabelForValue(value);
-                        const date = new Date(label);
-                        if (isNaN(date)) return label;
-                        const hours = date.getHours() % 12 || 12;
-                        const minutes = date.getMinutes().toString().padStart(2, '0');
-                        const ampm = date.getHours() >= 12 ? 'PM' : 'AM';
-                        const day = date.getDate().toString().padStart(2, '0');
-                        const month = (date.getMonth() + 1).toString().padStart(2, '0');
-                        const year = date.getFullYear();
-                        return `${day}/${month}/${year} ${hours}:${minutes} ${ampm}`;
-                    }
-                }
-            },
+            x: { title: { display: true, text: 'Time' }, ticks: { autoSkip: true, maxTicksLimit: 12 } },
             y: { beginAtZero: true, title: { display: true, text: 'Value' }, ticks: { maxTicksLimit: 8 } }
         },
-        elements: {
-            line: { tension: 0.3 }
-        }
+        elements: { line: { tension: 0.3 } }
     };
 
     // Real-time chart
@@ -161,28 +141,8 @@ function initCharts() {
         data: {
             labels: [],
             datasets: [
-                {
-                    label: 'Temperature (°C)',
-                    data: [],
-                    borderColor: tempColor,
-                    backgroundColor: 'rgba(255,87,34,0.08)',
-                    fill: true,
-                    tension: 0.3,
-                    pointRadius: 5,
-                    pointHoverRadius: 12,
-                    pointBackgroundColor: tempColor
-                },
-                {
-                    label: 'Humidity (%)',
-                    data: [],
-                    borderColor: humColor,
-                    backgroundColor: 'rgba(33,150,243,0.08)',
-                    fill: true,
-                    tension: 0.3,
-                    pointRadius: 5,
-                    pointHoverRadius: 12,
-                    pointBackgroundColor: humColor
-                }
+                { label: 'Temperature (°C)', data: [], borderColor: tempColor, backgroundColor: 'rgba(255,87,34,0.08)', fill: true, pointRadius: 5, pointHoverRadius: 12, pointBackgroundColor: tempColor },
+                { label: 'Humidity (%)', data: [], borderColor: humColor, backgroundColor: 'rgba(33,150,243,0.08)', fill: true, pointRadius: 5, pointHoverRadius: 12, pointBackgroundColor: humColor }
             ]
         },
         options: baseOptions
@@ -194,66 +154,13 @@ function initCharts() {
         data: {
             labels: [],
             datasets: [
-                {
-                    label: 'Avg Temp (°C)',
-                    data: [],
-                    borderColor: tempColor,
-                    backgroundColor: 'rgba(255,87,34,0.06)',
-                    borderDash: [6, 4],
-                    fill: true,
-                    tension: 0.2,
-                    pointRadius: 0
-                },
-                {
-                    label: 'Peak Temp (°C)',
-                    data: [],
-                    borderColor: tempColor,
-                    backgroundColor: 'rgba(255,87,34,0.08)',
-                    fill: true,
-                    tension: 0.2,
-                    pointRadius: 8,
-                    pointHoverRadius: 12,
-                    pointBackgroundColor: tempColor
-                },
-                {
-                    label: 'Avg Humidity (%)',
-                    data: [],
-                    borderColor: humColor,
-                    backgroundColor: 'rgba(33,150,243,0.06)',
-                    borderDash: [6, 4],
-                    fill: true,
-                    tension: 0.2,
-                    pointRadius: 0
-                },
-                {
-                    label: 'Peak Humidity (%)',
-                    data: [],
-                    borderColor: humColor,
-                    backgroundColor: 'rgba(33,150,243,0.08)',
-                    fill: true,
-                    tension: 0.2,
-                    pointRadius: 8,
-                    pointHoverRadius: 12,
-                    pointBackgroundColor: humColor
-                }
+                { label: 'Avg Temp (°C)', data: [], borderColor: tempColor, backgroundColor: 'rgba(255,87,34,0.06)', borderDash: [6,4], fill: true, pointRadius: 0 },
+                { label: 'Peak Temp (°C)', data: [], borderColor: tempColor, backgroundColor: 'rgba(255,87,34,0.08)', fill: true, pointRadius: 8, pointHoverRadius: 12, pointBackgroundColor: tempColor },
+                { label: 'Avg Humidity (%)', data: [], borderColor: humColor, backgroundColor: 'rgba(33,150,243,0.06)', borderDash: [6,4], fill: true, pointRadius: 0 },
+                { label: 'Peak Humidity (%)', data: [], borderColor: humColor, backgroundColor: 'rgba(33,150,243,0.08)', fill: true, pointRadius: 8, pointHoverRadius: 12, pointBackgroundColor: humColor }
             ]
         },
         options: baseOptions
-    });
-
-    // Toggle buttons
-    const toggleRealBtn = document.getElementById('toggleReal');
-    if (toggleRealBtn) toggleRealBtn.addEventListener('click', () => {
-        const card = realCanvas.closest('.chart-card') || realCanvas.parentElement;
-        if (!card) return;
-        card.style.display = card.style.display === 'none' ? '' : 'none';
-    });
-
-    const toggleHistBtn = document.getElementById('toggleHist');
-    if (toggleHistBtn) toggleHistBtn.addEventListener('click', () => {
-        const card = histCanvas.closest('.chart-card') || histCanvas.parentElement;
-        if (!card) return;
-        card.style.display = card.style.display === 'none' ? '' : 'none';
     });
 }
 
@@ -262,20 +169,9 @@ function initCharts() {
 // ==========================
 function normalizeArray(arr, len) {
     if (!Array.isArray(arr)) arr = [];
-    // keep most recent values on the right
     if (arr.length > len) return arr.slice(-len);
     if (arr.length === len) return arr;
-    const pad = new Array(len - arr.length).fill(null);
-    return pad.concat(arr);
-}
-
-function pickFirstArray(data, names) {
-    // names: array of possible keys to try in order
-    for (const n of names) {
-        if (Array.isArray(data[n])) return data[n];
-        if (data.data && Array.isArray(data.data[n])) return data.data[n];
-    }
-    return [];
+    return Array(len - arr.length).fill(null).concat(arr);
 }
 
 // ==========================
@@ -283,31 +179,27 @@ function pickFirstArray(data, names) {
 // ==========================
 function loadHistoricalData() {
     fetch('/history')
-        .then(res => {
-            if (!res.ok) throw new Error('History fetch failed');
-            return res.json();
-        })
+        .then(res => res.ok ? res.json() : Promise.reject('History fetch failed'))
         .then(data => {
-            // Accept many shapes:
-            // { labels, avg_temp/ temp_avg / temp, peak_temp / temp_peak, avg_hum / hum_avg / hum, peak_hum / hum_peak }
-            const labels = data.labels || (data.data && data.data.labels) || [];
-
-            if (!labels || labels.length === 0) {
-                // clear chart if no history
-                hist1Chart.data.labels = [];
-                hist1Chart.data.datasets.forEach(ds => ds.data = []);
-                hist1Chart.update();
+            const responseData = data.data || data;
+            const rawLabels = responseData.labels || [];
+            if (!rawLabels.length) {
+                if (hist1Chart) {
+                    hist1Chart.data.labels = [];
+                    hist1Chart.data.datasets.forEach(ds => ds.data = []);
+                    hist1Chart.update();
+                }
                 return;
             }
 
-            const avgTemp = pickFirstArray(data, ['avg_temp', 'temp_avg', 'avgTemp', 'temp']);
-            const peakTemp = pickFirstArray(data, ['peak_temp', 'temp_peak', 'peakTemp', 'temp']);
-            const avgHum = pickFirstArray(data, ['avg_hum', 'hum_avg', 'avgHum', 'hum']);
-            const peakHum = pickFirstArray(data, ['peak_hum', 'hum_peak', 'peakHum', 'hum']);
+            const labels = rawLabels;
+            const avgTemp = responseData.avg_temp || [];
+            const peakTemp = responseData.peak_temp || [];
+            const avgHum = responseData.avg_hum || [];
+            const peakHum = responseData.peak_hum || [];
 
             const L = labels.length;
             hist1Chart.data.labels = labels.slice(-L);
-
             hist1Chart.data.datasets[0].data = normalizeArray(avgTemp, L);
             hist1Chart.data.datasets[1].data = normalizeArray(peakTemp, L);
             hist1Chart.data.datasets[2].data = normalizeArray(avgHum, L);
@@ -315,9 +207,7 @@ function loadHistoricalData() {
 
             hist1Chart.update();
         })
-        .catch(err => {
-            console.error('Error loading historical data:', err);
-        });
+        .catch(err => console.error('Error loading historical data:', err));
 }
 
 // ==========================
@@ -331,20 +221,22 @@ async function fetchData() {
 
         updateStatus(true);
 
-        if (data.error || data.temperature === null || data.humidity === null) {
-            updateUI('--', '--', 'OFF');
+        if (data.error || data.temperature == null || data.humidity == null) {
+            updateUI('--','--','OFF');
             showErrorNotification();
         } else {
-            // Keep UI updates consistent with previous structure
-            const t = typeof data.temperature === 'number' ? data.temperature : parseFloat(data.temperature);
-            const h = typeof data.humidity === 'number' ? data.humidity : parseFloat(data.humidity);
-            const buz = data.buzzer !== undefined ? data.buzzer : 'OFF';
+            const t = Number(data.temperature);
+            const h = Number(data.humidity);
+            const buz = data.buzzer || 'OFF';
 
             updateUI(t, h, buz);
             updateRealTimeChart(t, h);
+
+            // <<< ADD THIS LINE TO REFRESH HISTORICAL DATA
+            loadHistoricalData();
+
             hideErrorNotification();
         }
-
         updateTime();
     } catch (err) {
         console.error('Fetch error:', err);
@@ -357,29 +249,31 @@ async function fetchData() {
 // UI Updates
 // ==========================
 function updateUI(temp, hum, buzzer) {
-    document.getElementById('temp').textContent = temp !== '--' ? `${temp} °C` : '--';
-    document.getElementById('humidity').textContent = hum !== '--' ? `${hum} %` : '--';
+    const tempEl = document.getElementById('temp');
+    const humEl = document.getElementById('humidity');
+    if (tempEl) tempEl.textContent = temp !== '--' ? `${temp} °C` : '--';
+    if (humEl) humEl.textContent = hum !== '--' ? `${hum} %` : '--';
 
     const tempBadge = document.getElementById('tempBadge');
-    const t = parseFloat(temp);
-
+    const t = Number(temp);
     if (!isNaN(t)) {
-        if (t >= 38) {
-            tempBadge.className = 'badge danger';
-            tempBadge.textContent = '⚠️ High';
-        } else if (t >= 30) {
-            tempBadge.className = 'badge warn';
-            tempBadge.textContent = '🔶 Warm';
-        } else {
-            tempBadge.className = 'badge ok';
-            tempBadge.textContent = '✅ Normal';
+        if (t >= 38) { 
+            tempBadge.className='badge danger'; 
+            tempBadge.textContent='⚠️ High'; 
         }
-    } else {
-        tempBadge.className = 'badge';
-        tempBadge.textContent = '--';
+        else if (t >= 30){ 
+            tempBadge.className='badge warn'; 
+            tempBadge.textContent='🔶 Warm'; 
+        }
+        else { 
+            tempBadge.className='badge ok'; 
+            tempBadge.textContent='✅ Normal'; 
+        }
+    } else { 
+        tempBadge.className='badge'; 
+        tempBadge.textContent='--'; 
     }
 
-    // Buzzer UI
     const buzzerIcon = document.getElementById('buzzer');
     const buzzerText = document.getElementById('buzzerText');
     const buzzerStatusIcon = document.getElementById('buzzerStatusIcon');
@@ -388,37 +282,37 @@ function updateUI(temp, hum, buzzer) {
     const isAlert = buzzer === 'ON' || (!isNaN(t) && t >= 38);
 
     if (isAlert) {
-        if (buzzerIcon) buzzerIcon.className = 'buzzer-icon buzzer-active';
-        if (buzzerText) buzzerText.textContent = 'ALERT';
-        if (buzzerStatusIcon) {
-            buzzerStatusIcon.src = '/static/icons/speaker.png';
-            buzzerStatusIcon.alt = 'Speaker Icon';
+        if(buzzerIcon) buzzerIcon.className='buzzer-icon buzzer-active';
+        if(buzzerText) buzzerText.textContent='ALERT';
+        if(buzzerStatusIcon){ 
+            buzzerStatusIcon.src='/static/icons/speaker.png'; 
+            buzzerStatusIcon.alt='Speaker Icon'; 
         }
-        if (buzzerBadge) buzzerBadge.className = 'badge danger';
+        if(buzzerBadge) buzzerBadge.className='badge danger';
     } else {
-        if (buzzerIcon) buzzerIcon.className = 'buzzer-icon';
-        if (buzzerText) buzzerText.textContent = 'Standby';
-        if (buzzerStatusIcon) {
-            buzzerStatusIcon.src = '/static/icons/mute.png';
-            buzzerStatusIcon.alt = 'Mute Icon';
+        if(buzzerIcon) buzzerIcon.className='buzzer-icon';
+        if(buzzerText) buzzerText.textContent='Standby';
+        if(buzzerStatusIcon){ 
+            buzzerStatusIcon.src='/static/icons/mute.png'; 
+            buzzerStatusIcon.alt='Mute Icon'; 
         }
-        if (buzzerBadge) buzzerBadge.className = 'badge ok';
+        if(buzzerBadge) buzzerBadge.className='badge ok';
     }
 }
 
+// ==========================
+// Real-time chart update (with year in x-axis)
+// ==========================
 function updateRealTimeChart(temp, hum) {
-    const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
+    const time = new Date().toLocaleString('en-US', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', hour12:true });
     realChart.data.labels.push(time);
     realChart.data.datasets[0].data.push(Number(temp));
     realChart.data.datasets[1].data.push(Number(hum));
 
-    // keep only last 10 points
-    if (realChart.data.labels.length > 10) {
+    if(realChart.data.labels.length > 10){
         realChart.data.labels.shift();
         realChart.data.datasets.forEach(ds => ds.data.shift());
     }
-
     realChart.update();
 }
 
@@ -427,68 +321,60 @@ function updateRealTimeChart(temp, hum) {
 // ==========================
 function updateStatus(connected) {
     const s = document.getElementById('status');
-    if (s) s.textContent = connected ? '🟢' : '🔴';
+    if(s) s.textContent = connected ? '🟢' : '🔴';
 }
 
-function updateTime() {
+function updateTime(){
     const el = document.getElementById('time');
-    if (el) el.textContent = new Date().toLocaleTimeString();
+    if(el) el.textContent = new Date().toLocaleTimeString();
 }
 
 // ==========================
 // Notifications
 // ==========================
-function initNotifications() {
+function initNotifications(){
     const closeNotif = document.getElementById('closeNotif');
-    if (closeNotif) {
-        closeNotif.addEventListener('click', hideErrorNotification);
+    if(closeNotif) closeNotif.addEventListener('click', hideErrorNotification);
+}
+
+function showErrorNotification(){
+    const n = document.getElementById('errorNotif');
+    if(!n) return;
+    if(!errorNotificationShown){ 
+        n.classList.add('show'); 
+        n.style.display='block'; 
+        errorNotificationShown=true; 
     }
 }
 
-function showErrorNotification() {
+function hideErrorNotification(){
     const n = document.getElementById('errorNotif');
-    if (!n) return;
-    if (!errorNotificationShown) {
-        n.classList.add('show');
-        // fallback to display block if CSS doesn't use .show
-        n.style.display = 'block';
-        errorNotificationShown = true;
-    }
-}
-
-function hideErrorNotification() {
-    const n = document.getElementById('errorNotif');
-    if (!n) return;
-    n.classList.remove('show');
-    n.style.display = 'none';
-    errorNotificationShown = false;
+    if(!n) return;
+    n.classList.remove('show'); 
+    n.style.display='none'; 
+    errorNotificationShown=false;
 }
 
 // ==========================
 // Clear Historical Data
 // ==========================
-function clearHistoricalData() {
-    if (!confirm('Are you sure you want to clear all historical data? This action cannot be undone.')) return;
+function clearHistoricalData(){
+    if(!confirm('Are you sure you want to clear all historical data? This action cannot be undone.')) return;
 
-    fetch('/clear_history', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-    })
-        .then(res => res.json())
-        .then(result => {
-            if (result.status === 'success' || result.status === 'ok') {
-                // clear chart
-                if (hist1Chart) {
-                    hist1Chart.data.labels = [];
-                    hist1Chart.data.datasets.forEach(ds => ds.data = []);
+    fetch('/clear_history',{method:'POST',headers:{'Content-Type':'application/json'}})
+        .then(res=>res.json())
+        .then(result=>{
+            if(result.status==='success'||result.status==='ok'){
+                if(hist1Chart){
+                    hist1Chart.data.labels=[];
+                    hist1Chart.data.datasets.forEach(ds=>ds.data=[]);
                     hist1Chart.update();
                 }
                 alert('Historical data cleared successfully!');
-            } else {
-                alert('Error clearing data: ' + (result.message || JSON.stringify(result)));
+            }else{
+                alert('Error clearing data: '+(result.message||JSON.stringify(result)));
             }
-        })
-        .catch(err => {
+        }).catch(err=>{
             console.error('Error clearing historical data:', err);
             alert('Error clearing data. Please try again.');
         });
