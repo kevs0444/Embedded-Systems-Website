@@ -1,31 +1,75 @@
 /* ================================
-   Activity 1 specific styles
+   Activity 2 specific styles
    ================================ */
-#temp {
-    color: #2196f3;
-}
 
-#humidity {
-    color: #4caf50;
-}
+/* --------------------------
+   Value Colors
+   -------------------------- */
+#ultra1 { color: #ff5722; }
+#ultra2 { color: #2196f3; }
 
-.temp-color { 
-    background: #2196f3; 
-}
+/* Badge colors for different statuses */
+.badge.ok { background: #d4edda; color: #155724; }
+.badge.warn { background: #fff3cd; color: #856404; }
+.badge.danger { background: #f8d7da; color: #721c24; }
 
-.humidity-color { 
-    background: #4caf50; 
-}
-
-/* Blue border styles for cards */
+/* --------------------------
+   Card Styles (match chart colors)
+   -------------------------- */
 .card.accent-border {
-    border: var(--accent-border);
-    box-shadow: var(--shadow-lg);
+    padding: 1.5rem;
+    border-radius: 20px;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    border: 2px solid var(--accent);
+    backdrop-filter: blur(10px);
 }
 
-/* ================================
-   Main charts container - MODERNIZED
-   ================================ */
+/* Theme-aware card background to match charts */
+[data-theme="light"] .card.accent-border {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+}
+
+[data-theme="dark"] .card.accent-border {
+    background: linear-gradient(135deg, rgba(40, 40, 55, 0.9) 0%, rgba(30, 30, 40, 0.9) 100%);
+}
+
+/* Hover effect */
+.card.accent-border:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+}
+
+/* Card headings and values */
+.card h3 {
+    margin-bottom: 0.5rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.card .value {
+    font-size: 1.6rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+/* Alert display for buzzer card */
+.alert-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.buzzer-icon img {
+    width: 40px;
+    height: 40px;
+}
+
+/* --------------------------
+   Charts Container - Modernized
+   -------------------------- */
 .charts-container {
     display: flex;
     flex-direction: column;
@@ -35,7 +79,6 @@
     margin: 30px auto;
 }
 
-/* Individual chart cards - MODERNIZED */
 .chart-card {
     border-radius: 20px;
     padding: 25px;
@@ -43,7 +86,7 @@
     box-shadow: 0 10px 30px rgba(0,0,0,0.12);
     min-height: 420px;
     backdrop-filter: blur(10px);
-    border: 2px solid var(--accent); /* Blue border for visibility */
+    border: 2px solid var(--accent);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -91,7 +134,6 @@ canvas {
     border-radius: 12px;
 }
 
-/* Modern chart styling */
 .chartjs-render-monitor {
     background: var(--chart-bg, rgba(255, 255, 255, 0.7));
     border-radius: 12px;
@@ -102,7 +144,7 @@ canvas {
     background: rgba(30, 30, 40, 0.7);
 }
 
-/* Theme-aware backgrounds */
+/* Theme-aware backgrounds for charts */
 [data-theme="light"] .chart-card {
     background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
     --chart-bg: rgba(255, 255, 255, 0.7);
@@ -113,9 +155,9 @@ canvas {
     --chart-bg: rgba(30, 30, 40, 0.7);
 }
 
-/* ================================
-   Button hover effects - MODERNIZED
-   ================================ */
+/* --------------------------
+   Buttons hover effects
+   -------------------------- */
 .clear-data-btn, .toggle-chart {
     padding: 10px;
     border-radius: 50%;
@@ -128,7 +170,7 @@ canvas {
     transition: all 0.3s ease;
 }
 
-[data-theme="dark"] .clear-data-btn, 
+[data-theme="dark"] .clear-data-btn,
 [data-theme="dark"] .toggle-chart {
     background: rgba(255, 255, 255, 0.1);
 }
@@ -138,7 +180,7 @@ canvas {
     background: rgba(0, 0, 0, 0.1);
 }
 
-[data-theme="dark"] .clear-data-btn:hover, 
+[data-theme="dark"] .clear-data-btn:hover,
 [data-theme="dark"] .toggle-chart:hover {
     background: rgba(255, 255, 255, 0.2);
 }
@@ -155,7 +197,9 @@ canvas {
     box-shadow: 0 2px 8px rgba(255, 255, 255, 0.15);
 }
 
-/* Responsive adjustments */
+/* --------------------------
+   Responsive adjustments
+   -------------------------- */
 @media (max-width: 768px) {
     .charts-container {
         width: 100%;
@@ -173,5 +217,10 @@ canvas {
     
     .chart-header h3 {
         font-size: 1.2rem;
+    }
+    
+    .grid {
+        flex-direction: column;
+        align-items: center;
     }
 }

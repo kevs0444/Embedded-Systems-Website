@@ -1,3 +1,4 @@
+# app.py - Main Flask Server with Main Menu + Activity Management
 from flask import Flask, render_template, jsonify, send_from_directory, redirect, url_for, request
 import os
 import signal
@@ -24,7 +25,7 @@ def signal_handler(signum, frame):
         act2.cleanup()
         save_act2_history()
     current_activity = None
-    os._exit(0)
+    exit(0)
 
 # -------------------- Helper Functions --------------------
 def stop_current_activity():
@@ -39,36 +40,37 @@ def stop_current_activity():
     current_activity = None
 
 def save_act2_history():
-    """Save Act2 history to JSON file without duplication."""
+    """Save Act2 history to JSON file."""
     try:
         if not os.path.exists(ACT2_HISTORY_DIR):
             os.makedirs(ACT2_HISTORY_DIR, exist_ok=True)
-
-        # Just save the current in-memory history directly
         current_history = act2.get_history()
         with open(ACT2_HISTORY_FILE, "w") as f:
             json.dump(current_history, f, indent=4)
-
         print(f"Act2 history saved ({len(current_history)} records)")
-
     except Exception as e:
         print(f"Error saving Act2 history: {e}")
 
 def load_act2_history():
-    """Load Act2 history from JSON file if it exists and merge into act2."""
+    """Load Act2 history from JSON file."""
     try:
         if os.path.exists(ACT2_HISTORY_FILE):
             with open(ACT2_HISTORY_FILE, "r") as f:
                 history = json.load(f)
             if isinstance(history, list):
                 act2.set_history(history)
-                print(f"Act2 history loaded from {ACT2_HISTORY_FILE} ({len(history)} records)")
+                print(f"Act2 history loaded ({len(history)} records)")
             else:
-                print("Invalid Act2 history file format, starting fresh")
+                print("Invalid Act2 history format, starting fresh")
         else:
             print("No Act2 history file found, starting fresh")
     except Exception as e:
         print(f"Error loading Act2 history: {e}")
+
+# -------------------- Main Menu --------------------
+@app.route("/")
+def index():
+    return render_template("index.html")
 
 # -------------------- ACTIVITY 1 --------------------
 @app.route("/act1")
@@ -87,9 +89,7 @@ def sensor_data():
 
 @app.route("/history")
 def history():
-    # Return the historical data in the expected format
-    hist_data = act1.get_history()
-    return jsonify(hist_data)
+    return jsonify(act1.get_history())
 
 @app.route("/clear_history", methods=["POST"])
 def clear_history():
@@ -111,10 +111,7 @@ def act2_page():
     if current_activity:
         stop_current_activity()
         time.sleep(1)
-    
-    # Load history BEFORE starting the activity
     load_act2_history()
-    
     success = act2.start_act2()
     current_activity = 'act2' if success else None
     return render_template("act2.html")
@@ -125,29 +122,15 @@ def sensor_data2():
 
 @app.route("/history2")
 def history2():
-    data = act2.get_history()
-    labels, distance = [], []
-    for entry in data:
-        labels.append(f"{entry.get('date','')} {entry.get('time','')}")
-        distance.append(entry.get("distance"))
-    return jsonify({
-        "labels": labels,
-        "distance": distance
-    })
+    return jsonify(act2.get_history())
 
 @app.route("/clear_history2", methods=["POST"])
 def clear_history2():
     try:
-        # Make sure directory exists
         os.makedirs(ACT2_HISTORY_DIR, exist_ok=True)
-
-        # Overwrite file with empty list
         with open(ACT2_HISTORY_FILE, "w") as f:
             json.dump([], f, indent=2)
-
-        # Also reset in-memory history in act2
         act2.set_history([])
-
         print("Act2 history cleared")
         return jsonify({"status": "ok", "message": "Historical data cleared"})
     except Exception as e:
@@ -169,18 +152,15 @@ def send_static(path):
     full_path = os.path.join(app.static_folder, path)
     if os.path.isfile(full_path):
         return send_from_directory(app.static_folder, path)
-    return "", 204  # Prevent 404 for missing static files
+    return "", 204
 
 # -------------------- Main --------------------
-@app.route("/")
-def index():
-    return render_template("index.html")
-
 if __name__ == "__main__":
+    # Setup signal handlers
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
 
-    # Load Act2 history at startup
+    # Load Act2 history
     load_act2_history()
 
     try:

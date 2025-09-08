@@ -1,227 +1,142 @@
 [
     {
-        "date": "07-09-2025",
-        "time": "19:56:49",
-        "distance": 11.9
+        "time": "02:23:21",
+        "distance1": 13.7,
+        "distance2": 4.1,
+        "temperature": 27.4,
+        "humidity": 89
     },
     {
-        "date": "07-09-2025",
-        "time": "19:56:50",
-        "distance": 11.8
+        "time": "02:23:24",
+        "distance1": 14.4,
+        "distance2": 3.6,
+        "temperature": 27.4,
+        "humidity": 89
     },
     {
-        "date": "07-09-2025",
-        "time": "19:56:53",
-        "distance": 11.8
+        "time": "02:23:26",
+        "distance1": null,
+        "distance2": 4.9,
+        "temperature": 27.3,
+        "humidity": 89
     },
     {
-        "date": "07-09-2025",
-        "time": "19:58:15",
-        "distance": 12.0
+        "time": "02:23:28",
+        "distance1": null,
+        "distance2": 4.1,
+        "temperature": 27.4,
+        "humidity": 89
     },
     {
-        "date": "07-09-2025",
-        "time": "19:58:19",
-        "distance": 6.3
+        "time": "02:23:31",
+        "distance1": 15.2,
+        "distance2": 3.3,
+        "temperature": 27.3,
+        "humidity": 89
     },
     {
-        "date": "07-09-2025",
-        "time": "19:58:21",
-        "distance": 11.7
+        "time": "02:23:33",
+        "distance1": 6.9,
+        "distance2": 4.1,
+        "temperature": 27.3,
+        "humidity": 89
     },
     {
-        "date": "07-09-2025",
-        "time": "19:58:25",
-        "distance": 12.4
+        "time": "02:23:36",
+        "distance1": 9.1,
+        "distance2": 4.1,
+        "temperature": null,
+        "humidity": null
     },
     {
-        "date": "07-09-2025",
-        "time": "19:58:27",
-        "distance": 8.7
+        "time": "02:23:39",
+        "distance1": null,
+        "distance2": 4.1,
+        "temperature": 27.3,
+        "humidity": 89
     },
     {
-        "date": "07-09-2025",
-        "time": "23:32:38",
-        "distance": 11.3
+        "time": "02:23:41",
+        "distance1": 13.9,
+        "distance2": 4.1,
+        "temperature": 27.4,
+        "humidity": 89
     },
     {
-        "date": "07-09-2025",
-        "time": "23:32:40",
-        "distance": 10.6
+        "time": "02:23:43",
+        "distance1": 13.7,
+        "distance2": 4.1,
+        "temperature": 27.3,
+        "humidity": 89
     },
     {
-        "date": "07-09-2025",
-        "time": "23:32:46",
-        "distance": 10.6
+        "time": "02:23:46",
+        "distance1": 13.8,
+        "distance2": 4.1,
+        "temperature": 27.4,
+        "humidity": 89
     },
     {
-        "date": "07-09-2025",
-        "time": "23:32:52",
-        "distance": 10.4
+        "time": "02:30:50",
+        "distance1": 5.3,
+        "distance2": 3.6,
+        "temperature": 27.4,
+        "humidity": 89
     },
     {
-        "date": "07-09-2025",
-        "time": "23:32:54",
-        "distance": 8.6
+        "time": "02:30:52",
+        "distance1": 9.6,
+        "distance2": 3.6,
+        "temperature": 27.4,
+        "humidity": 89
     },
     {
-        "date": "07-09-2025",
-        "time": "23:32:58",
-        "distance": 4.7
+        "time": "02:30:54",
+        "distance1": 4.9,
+        "distance2": 3.6,
+        "temperature": 27.5,
+        "humidity": 88
     },
     {
-        "date": "07-09-2025",
-        "time": "23:33:00",
-        "distance": 11.6
+        "time": "02:30:56",
+        "distance1": 4.1,
+        "distance2": 3.6,
+        "temperature": 27.5,
+        "humidity": 88
     },
     {
-        "date": "07-09-2025",
-        "time": "23:55:41",
-        "distance": 198.5
+        "time": "02:30:59",
+        "distance1": 4.0,
+        "distance2": 3.6,
+        "temperature": 27.6,
+        "humidity": 88
     },
     {
-        "date": "07-09-2025",
-        "time": "23:55:45",
-        "distance": 12.3
+        "time": "02:31:01",
+        "distance1": 4.6,
+        "distance2": 3.6,
+        "temperature": 27.6,
+        "humidity": 88
     },
     {
-        "date": "07-09-2025",
-        "time": "23:55:51",
-        "distance": 8.5
+        "time": "02:31:03",
+        "distance1": 3.8,
+        "distance2": 3.6,
+        "temperature": 27.6,
+        "humidity": 88
     },
     {
-        "date": "07-09-2025",
-        "time": "23:55:53",
-        "distance": 12.2
+        "time": "02:31:05",
+        "distance1": 3.2,
+        "distance2": 4.1,
+        "temperature": 27.6,
+        "humidity": 88
     },
     {
-        "date": "07-09-2025",
-        "time": "23:55:57",
-        "distance": 11.2
-    },
-    {
-        "date": "07-09-2025",
-        "time": "23:55:59",
-        "distance": 7.3
-    },
-    {
-        "date": "07-09-2025",
-        "time": "23:56:03",
-        "distance": 9.3
-    },
-    {
-        "date": "07-09-2025",
-        "time": "23:56:05",
-        "distance": 7.8
-    },
-    {
-        "date": "07-09-2025",
-        "time": "23:56:07",
-        "distance": 8.1
-    },
-    {
-        "date": "07-09-2025",
-        "time": "23:56:09",
-        "distance": 12.5
-    },
-    {
-        "date": "07-09-2025",
-        "time": "23:56:11",
-        "distance": 10.5
-    },
-    {
-        "date": "07-09-2025",
-        "time": "23:56:13",
-        "distance": 11.7
-    },
-    {
-        "date": "07-09-2025",
-        "time": "23:56:15",
-        "distance": 9.6
-    },
-    {
-        "date": "07-09-2025",
-        "time": "23:57:35",
-        "distance": 11.7
-    },
-    {
-        "date": "07-09-2025",
-        "time": "23:57:37",
-        "distance": 11.3
-    },
-    {
-        "date": "07-09-2025",
-        "time": "23:57:39",
-        "distance": 10.1
-    },
-    {
-        "date": "07-09-2025",
-        "time": "23:57:41",
-        "distance": 11.8
-    },
-    {
-        "date": "07-09-2025",
-        "time": "23:57:43",
-        "distance": 11.0
-    },
-    {
-        "date": "07-09-2025",
-        "time": "23:57:44",
-        "distance": 11.1
-    },
-    {
-        "date": "07-09-2025",
-        "time": "23:57:49",
-        "distance": 9.1
-    },
-    {
-        "date": "07-09-2025",
-        "time": "23:57:51",
-        "distance": 10.5
-    },
-    {
-        "date": "07-09-2025",
-        "time": "23:57:53",
-        "distance": 12.0
-    },
-    {
-        "date": "07-09-2025",
-        "time": "23:57:54",
-        "distance": 12.1
-    },
-    {
-        "date": "07-09-2025",
-        "time": "23:57:57",
-        "distance": 12.0
-    },
-    {
-        "date": "07-09-2025",
-        "time": "23:57:59",
-        "distance": 12.2
-    },
-    {
-        "date": "07-09-2025",
-        "time": "23:58:01",
-        "distance": 10.9
-    },
-    {
-        "date": "07-09-2025",
-        "time": "23:58:04",
-        "distance": 11.0
-    },
-    {
-        "date": "07-09-2025",
-        "time": "23:58:07",
-        "distance": 7.1
-    },
-    {
-        "date": "07-09-2025",
-        "time": "23:58:09",
-        "distance": 12.0
-    },
-    {
-        "date": "07-09-2025",
-        "time": "23:58:10",
-        "distance": 11.9
+        "time": "02:31:08",
+        "distance1": 13.3,
+        "distance2": 4.1,
+        "temperature": 27.6,
+        "humidity": 88
     }
 ]

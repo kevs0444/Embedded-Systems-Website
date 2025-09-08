@@ -1,141 +1,36 @@
-/* Activity 2 specific styles */
-.act2-card {
-    border: 2px solid var(--accent);
-    background: var(--card);
-    box-shadow: 0 4px 12px rgba(0, 128, 255, 0.2);
-    transition: transform 0.2s ease;
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background: #f0f0f0;
+    margin: 20px;
 }
 
-.act2-card:hover {
-    transform: translateY(-5px);
+h1 {
+    color: #333;
 }
 
-#distance1, #distance2 {
-    font-size: 2rem;
-    font-weight: bold;
-    color: var(--accent);
-}
-
-.distance1-color {
-    background: #2196f3;
-}
-
-.distance2-color {
-    background: #ff9800;
-}
-
-.temp-color { 
-    background: #2196f3; 
-}
-
-.hum-color {
-    background: #4caf50;
-}
-
-.humidity-color { 
-    background: #4caf50; 
-}
-
-/* Buzzer glow animation */
-.buzzer-icon.buzzer-active {
-    animation: buzzerGlow 1s infinite alternate;
-    filter: drop-shadow(0 0 5px #ff0000);
-}
-
-@keyframes buzzerGlow {
-    from {
-        filter: drop-shadow(0 0 5px #ff0000);
-    }
-    to {
-        filter: drop-shadow(0 0 15px #ff0000);
-    }
-}
-
-/* Responsive tweaks */
-@media (max-width: 600px) {
-    .act2-card {
-        font-size: 0.9rem;
-        padding: 1rem;
-    }
-
-    #distance1, #distance2 {
-        font-size: 1.5rem;
-    }
-    
-    .buzzer-icon.buzzer-active {
-        animation: buzzerGlowMobile 1s infinite alternate;
-    }
-    
-    @keyframes buzzerGlowMobile {
-        from {
-            filter: drop-shadow(0 0 3px #ff0000);
-        }
-        to {
-            filter: drop-shadow(0 0 8px #ff0000);
-        }
-    }
-}
-
-/* Tooltip styles */
-.chart-tooltip {
-    position: absolute;
-    background: var(--card);
-    color: var(--text);
-    padding: 8px 12px;
-    border-radius: 6px;
-    font-size: 14px;
-    pointer-events: none;
-    z-index: 100;
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow);
-    opacity: 0;
-    transition: opacity 0.2s;
-}
-
-.chart-tooltip.show {
-    opacity: 1;
-}
-
-.tooltip-time {
-    font-weight: 600;
-    margin-bottom: 4px;
-    color: var(--text);
-}
-
-.tooltip-data {
+/* Cards styling */
+.cards-container {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
 }
 
-.tooltip-item {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 13px;
+.card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 20px 25px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    font-size: 1.2rem;
+    min-width: 150px;
 }
 
-.tooltip-color {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-}
-
-/* Dynamic arrow positioning will be handled by JavaScript */
-.chart-tooltip[data-position="top"]::after {
-    bottom: -12px;
-    left: 50%;
-    transform: translateX(-50%);
-    border-top-color: var(--tooltip-border);
-}
-
-.chart-tooltip[data-position="bottom"]::after {
-    top: -12px;
-    left: 50%;
-    transform: translateX(-50%);
-    border-bottom-color: var(--tooltip-border);
-}
-
-.chart-section:not(:last-child) {
-    margin-bottom: 2rem;
+/* Charts styling */
+canvas {
+    background: #fff;
+    border: 1px solid #ccc;
+    margin-top: 20px;
+    max-width: 800px;
 }

@@ -1,565 +1,104 @@
-class SimpleChart {
-    constructor(canvas, options = {}) {
-        this.canvas = canvas;
-        this.ctx = canvas.getContext('2d');
-        this.data = { labels: [], datasets: [] };
-        this.colors = options.colors || ['#2196f3']; // default to distance color
-        this.maxPoints = options.maxPoints || 20;
-        this.padding = 40;
-        this.hidden = false;
-        this.tooltip = null;
-        this.chartId = options.chartId || 'chart'; // Add chart identifier
+let distanceChart = null;
+let envChart = null;
+let tick = 0;
 
-        this.canvas.addEventListener('mousemove', e => this.handleMouseMove(e));
-        this.canvas.addEventListener('mouseleave', () => this.hideTooltip());
-
-        window.addEventListener('resize', () => this.resize());
-        this.resize();
-    }
-
-    resize() {
-        const dpr = window.devicePixelRatio || 1;
-        const rect = this.canvas.parentElement.getBoundingClientRect();
-        this.canvas.width = rect.width * dpr;
-        this.canvas.height = rect.height * dpr;
-        this.ctx.setTransform(1, 0, 0, 1, 0, 0);
-        this.ctx.scale(dpr, dpr);
-        this.draw();
-    }
-
-    setTooltip(el) { this.tooltip = el; }
-
-    addData(label, values) {
-        if (this.data.datasets.length === 0) {
-            // Initialize datasets based on the number of values
-            for (let i = 0; i < values.length; i++) {
-                this.data.datasets.push({ data: [] });
-            }
-        }
-
-        this.data.labels.push(label);
-        
-        values.forEach((value, i) => {
-            this.data.datasets[i].data.push(value);
-        });
-
-        if (this.data.labels.length > this.maxPoints) {
-            this.data.labels.shift();
-            this.data.datasets.forEach(ds => ds.data.shift());
-        }
-
-        this.draw();
-    }
-
-   draw() {
-        if (this.hidden) return;
-        const ctx = this.ctx;
-        const width = this.canvas.width / (window.devicePixelRatio || 1);
-        const height = this.canvas.height / (window.devicePixelRatio || 1);
-        const padding = this.padding;
-
-        ctx.clearRect(0, 0, width, height);
-        if (!this.data.labels.length) return;
-
-        const chartWidth = width - padding * 2;
-        const chartHeight = height - padding * 2;
-
-        // ------------------- Dynamic Y-axis -------------------
-        // Find min/max across all datasets
-        let dataMin = Infinity;
-        let dataMax = -Infinity;
-        
-        this.data.datasets.forEach(ds => {
-            const validData = ds.data.filter(v => v != null);
-            if (validData.length) {
-                dataMin = Math.min(dataMin, Math.min(...validData));
-                dataMax = Math.max(dataMax, Math.max(...validData));
-            }
-        });
-        
-        // If no valid data, use defaults
-        if (dataMin === Infinity) {
-            dataMin = 0;
-            dataMax = this.data.datasets.length > 1 ? 100 : 20; // Default to 20 for distance, 100 for temp/hum
-        }
-
-        // Compute nice Y-axis step
-        let step = 5; 
-        let range = dataMax - dataMin;
-        if (range > 20) step = Math.ceil(range / 5 / 5) * 5; // adjust step dynamically
-        const min = Math.floor(dataMin / step) * step;
-        const max = Math.ceil(dataMax / step) * step;
-        
-        // Create Y-axis labels
-        const yAxisLabels = [];
-        for (let y = min; y <= max; y += step) yAxisLabels.push(y);
-
-        const totalRange = max - min || 1;
-        const stepX = chartWidth / (this.data.labels.length - 1 || 1);
-
-        // ------------------- Grid + Y labels -------------------
-        ctx.strokeStyle = '#ccc';
-        ctx.lineWidth = 0.5;
-        ctx.fillStyle = '#666';
-        ctx.font = '10px sans-serif';
-        yAxisLabels.forEach(yVal => {
-            const y = padding + chartHeight - ((yVal - min) / totalRange) * chartHeight;
-            ctx.beginPath(); ctx.moveTo(padding, y); ctx.lineTo(width - padding, y); ctx.stroke();
-            ctx.fillText(yVal.toFixed(0), 2, y + 3);
-        });
-
-        // ------------------- Draw datasets -------------------
-        this.data.datasets.forEach((ds, dsIndex) => {
-            ctx.strokeStyle = this.colors[dsIndex];
-            ctx.lineWidth = 2; 
-            ctx.beginPath();
-            
-            let firstPoint = true;
-            ds.data.forEach((v, i) => {
-                if (v == null) return;
-                const x = padding + i * stepX;
-                const y = padding + chartHeight - ((v - min) / totalRange) * chartHeight;
-                
-                if (firstPoint) {
-                    ctx.moveTo(x, y);
-                    firstPoint = false;
-                } else {
-                    ctx.lineTo(x, y);
-                }
-            });
-            ctx.stroke();
-
-            // Draw points
-            ctx.fillStyle = this.colors[dsIndex];
-            ds.data.forEach((v, i) => {
-                if (v == null) return;
-                const x = padding + i * stepX;
-                const y = padding + chartHeight - ((v - min) / totalRange) * chartHeight;
-                ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2); ctx.fill();
-            });
-        });
-    }
-
-    showTooltip(x, y, index) {
-        if (!this.tooltip) return;
-        const label = this.data.labels[index];
-        
-        // Format time based on chart type
-        let timeDisplay;
-        if (this.maxPoints === 20) { // Real-time chart
-            const time = new Date();
-            timeDisplay = time.toLocaleTimeString('en-US', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
-        } else {
-            timeDisplay = label;
-        }
-
-        // Build tooltip content based on chart type
-        let tooltipContent = `<div class="tooltip-time">${timeDisplay}</div><div class="tooltip-data">`;
-        
-        if (this.data.datasets.length === 1) {
-            // Distance chart
-            const distance = this.data.datasets[0].data[index];
-            tooltipContent += `
-                <div class="tooltip-item">
-                    <div class="tooltip-color" style="background: #2196f3;"></div>
-                    <span>Distance: ${distance?.toFixed(1) || '--'} cm</span>
-                </div>
-            `;
-        } else {
-            // Temperature & Humidity chart
-            const temp = this.data.datasets[0].data[index];
-            const humidity = this.data.datasets[1].data[index];
-            tooltipContent += `
-                <div class="tooltip-item">
-                    <div class="tooltip-color" style="background: #2196f3;"></div>
-                    <span>Temperature: ${temp?.toFixed(1) || '--'}°C</span>
-                </div>
-                <div class="tooltip-item">
-                    <div class="tooltip-color" style="background: #4caf50;"></div>
-                    <span>Humidity: ${humidity?.toFixed(1) || '--'}%</span>
-                </div>
-            `;
-        }
-        
-        tooltipContent += '</div>';
-        this.tooltip.innerHTML = tooltipContent;
-
-        const rect = this.canvas.getBoundingClientRect();
-        const offsetX = x - rect.left;
-        const offsetY = y - rect.top;
-
-        // Position tooltip with offset from cursor
-        this.tooltip.style.left = `${offsetX + 15}px`;
-        this.tooltip.style.top = `${offsetY - 15}px`;
-
-        this.tooltip.classList.add('show');
-    }
-
-    handleMouseMove(e) {
-        if (!this.tooltip || !this.data.labels.length) return;
-        
-        const rect = this.canvas.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-        
-        // Check if mouse is within chart area
-        if (mouseX < this.padding || mouseX > rect.width - this.padding ||
-            mouseY < this.padding || mouseY > rect.height - this.padding) {
-            this.hideTooltip();
-            return;
-        }
-        
-        const chartWidth = rect.width - (this.padding * 2);
-        const stepX = chartWidth / (this.data.labels.length - 1 || 1);
-        
-        // Find closest data point
-        const xPos = mouseX - this.padding;
-        const idx = Math.round(xPos / stepX);
-        
-        if (idx >= 0 && idx < this.data.labels.length) {
-            // Check if any dataset has data at this index
-            const hasData = this.data.datasets.some(ds => ds.data[idx] !== null);
-            if (hasData) {
-                this.showTooltip(e.clientX, e.clientY, idx);
-            } else {
-                this.hideTooltip();
-            }
-        }
-    }
-
-    hideTooltip() { if (this.tooltip) this.tooltip.classList.remove('show'); }
-
-    toggle() {
-        this.hidden = !this.hidden;
-        this.canvas.style.display = this.hidden ? 'none' : 'block';
-        if (!this.hidden) this.draw();
-        
-        // Update toggle icon
-        const chartId = this.canvas.id.replace('Chart', '');
-        updateChartToggleIcon(chartId, this.hidden);
-    }
-
-    setData(data) {
-        this.data = data;
-        this.draw();
-    }
-}
-
-// ------------------------ Modal functions ------------------------
-function showBackModal() {
-    const modal = document.getElementById('backModal');
-    modal.classList.add('show');
-}
-
-function hideBackModal() {
-    const modal = document.getElementById('backModal');
-    modal.classList.remove('show');
-}
-
-function handleBackConfirmation() {
-    hideBackModal();
-    window.location.href = '/stop_act2';
-}
-
-// ------------------------ Initialize everything ------------------------
-document.addEventListener('DOMContentLoaded', () => {
-    initTheme();
-    initCharts();
-    initNotifications();
-    initModalHandlers();
-    fetchHistoricalData();
-    fetchRealTimeData();
-    setInterval(fetchRealTimeData, 2000);
-});
-
-// ------------------------ Initialize modal handlers ------------------------
-function initModalHandlers() {
-    const backButton = document.getElementById('backBtn');
-    if (backButton) {
-        backButton.addEventListener('click', function(e) {
-            e.preventDefault();
-            showBackModal();
-        });
-    }
-
-    document.getElementById('modalClose').addEventListener('click', hideBackModal);
-    document.getElementById('modalCancel').addEventListener('click', hideBackModal);
-    document.getElementById('modalConfirm').addEventListener('click', handleBackConfirmation);
-
-    document.getElementById('backModal').addEventListener('click', function(e) {
-        if (e.target === this) hideBackModal();
-    });
-}
-
-// ------------------------ Global vars ------------------------
-let realChart, histChart, tempHumChart;
-let errorNotificationShown = false;
-
-// ------------------------ Theme ------------------------
-function initTheme() {
-    const themeBtn = document.getElementById('themeBtn');
-    const themeIcon = document.getElementById('themeIcon');
-    const saved = localStorage.getItem('theme') || 'light';
-
-    document.body.setAttribute('data-theme', saved);
-    
-    // Set initial icon
-    if (saved === 'light') {
-        themeIcon.src = '/static/icons/dark-mode.png';
-        themeIcon.alt = 'Switch to dark mode';
-    } else {
-        themeIcon.src = '/static/icons/light-mode.png';
-        themeIcon.alt = 'Switch to light mode';
-    }
-
-    themeBtn.onclick = () => {
-        const current = document.body.getAttribute('data-theme');
-        const newTheme = current === 'light' ? 'dark' : 'light';
-        document.body.setAttribute('data-theme', newTheme);
-        
-        // Update the icon
-        if (newTheme === 'light') {
-            themeIcon.src = '/static/icons/dark-mode.png';
-            themeIcon.alt = 'Switch to dark mode';
-        } else {
-            themeIcon.src = '/static/icons/light-mode.png';
-            themeIcon.alt = 'Switch to light mode';
-        }
-        
-        localStorage.setItem('theme', newTheme);
-        
-        setTimeout(() => {
-            if (realChart) realChart.draw();
-            if (histChart) histChart.draw();
-            if (tempHumChart) tempHumChart.draw();
-        }, 100);
-    };
-}
-
-// ------------------------ Initialize charts ------------------------
 function initCharts() {
-    realChart = new SimpleChart(document.getElementById('realChart'), {
-        maxPoints: 20,
-        chartId: 'realChart'
-    });
-    realChart.setTooltip(document.getElementById('realTooltip'));
-    document.getElementById('toggleReal').onclick = () => realChart.toggle();
-
-    tempHumChart = new SimpleChart(document.getElementById('tempHumChart'), {
-        maxPoints: 20,
-        chartId: 'tempHumChart',
-        colors: ['#2196f3', '#4caf50'] // Blue for temp, Green for humidity
-    });
-    tempHumChart.setTooltip(document.getElementById('tempHumTooltip'));
-    document.getElementById('toggleTempHum').onclick = () => tempHumChart.toggle();
-
-    histChart = new SimpleChart(document.getElementById('histChart'), {
-        maxPoints: 500,
-        chartId: 'histChart'
-    });
-    histChart.setTooltip(document.getElementById('histTooltip'));
-    document.getElementById('toggleHist').onclick = () => histChart.toggle();
-
-    // Hook up Clear button
-    const clearBtn = document.getElementById('clearData');
-    if (clearBtn) {
-        clearBtn.onclick = clearHistoricalData;
-    }
-}
-
-// ------------------------ Fetch data ------------------------
-async function fetchRealTimeData() {
-    let temperature = null, humidity = null, distance = null, buzzer = 'OFF';
-
-    try {
-        const res = await fetch('/sensor2'); 
-        if (res.ok) {
-            const data = await res.json();
-            temperature = parseFloat(data.temperature);
-            humidity = parseFloat(data.humidity);
-            distance = parseFloat(data.distance);
-            buzzer = data.buzzer ?? 'OFF';
-        }
-        updateStatus(true);
-    } catch (err) {
-        console.error('Fetch error:', err);
-        updateStatus(false);
-    }
-
-    const lastDistance = realChart.data.datasets[0]?.data.slice(-1)[0] ?? 0;
-    distance = !isNaN(distance) ? distance : lastDistance;
-
-    const time = new Date().toLocaleTimeString('en-US', {
-        hour: 'numeric',
-        minute: '2-digit',
-        hour12: true
-    });
-
-    realChart.addData(time, [distance]);
-    
-    // Add data to temperature & humidity chart
-    if (!isNaN(temperature) && !isNaN(humidity)) {
-        tempHumChart.addData(time, [temperature, humidity]);
-    }
-
-    updateCards(distance, temperature, humidity, buzzer);
-    document.getElementById('time').textContent = time;
-}
-
-// ------------------------ Load historical data ------------------------
-async function fetchHistoricalData() {
-    try {
-        const res = await fetch('/history2');
-        if (!res.ok) return;
-
-        const data = await res.json();
-        if (!data.labels || !data.distance) return;
-
-        histChart.setData({
-            labels: data.labels,
-            datasets: [{ data: data.distance }]
-        });
-    } catch (err) {
-        console.error('Error loading historical data:', err);
-    }
-}
-
-// ------------------------ Cards update ------------------------
-function updateCards(distance, temperature, humidity, buzzer) {
-    document.getElementById('distance').textContent =
-        distance != null ? distance.toFixed(1) + ' cm' : '--';
-    const distBadge = document.getElementById('distanceBadge');
-    distBadge.className = distance >= 12 ? 'badge danger' :
-                          distance < 1 ? 'badge warn' : 'badge ok';
-    distBadge.textContent = distance >= 12 ? '⚠️ Far Away' :
-                            distance < 1 ? '📶 Too Close' : '✅ Normal';
-
-    document.getElementById('temperature').textContent =
-        temperature != null ? temperature.toFixed(1) + '°C' : '--';
-    const tempBadge = document.getElementById('tempBadge');
-    tempBadge.className = temperature > 35 ? 'badge danger' :
-                          temperature < 15 ? 'badge warn' : 'badge ok';
-    tempBadge.textContent = temperature > 35 ? '🔥 Hot' :
-                            temperature < 15 ? '❄️ Cold' : '✅ Normal';
-
-    document.getElementById('humidity').textContent =
-        humidity != null ? humidity.toFixed(1) + '%' : '--';
-    const humBadge = document.getElementById('humBadge');
-    humBadge.className = humidity > 80 ? 'badge danger' :
-                         humidity < 30 ? 'badge warn' : 'badge ok';
-    humBadge.textContent = humidity > 80 ? '💧 High' :
-                           humidity < 30 ? '🏜️ Low' : '✅ Normal';
-
-    const buzzerIcon = document.getElementById('buzzer');
-    const buzzerText = document.getElementById('buzzerText');
-    const buzzerStatusIcon = document.getElementById('buzzerStatusIcon');
-    if (buzzer === 'ON') {
-        buzzerIcon.classList.add('buzzer-active');
-        buzzerText.textContent = 'Active';
-        buzzerStatusIcon.src = '/static/icons/speaker.png';
-    } else {
-        buzzerIcon.classList.remove('buzzer-active');
-        buzzerText.textContent = 'Standby';
-        buzzerStatusIcon.src = '/static/icons/mute.png';
-    }
-}
-
-// ------------------------ Status & notifications ------------------------
-function updateStatus(connected) {
-    document.getElementById('status').textContent = connected ? '🟢' : '🔴';
-}
-
-function initNotifications() {
-    document.getElementById('closeNotif').onclick = hideErrorNotification;
-}
-
-function showErrorNotification() {
-    if (!errorNotificationShown) {
-        document.getElementById('errorNotif').classList.add('show');
-        errorNotificationShown = true;
-    }
-}
-
-function hideErrorNotification() {
-    document.getElementById('errorNotif').classList.remove('show');
-    errorNotificationShown = false;
-}
-
-// ------------------------ Clear historical ------------------------
-function clearHistoricalData() {
-    const modal = document.createElement('div');
-    modal.className = 'modal';
-    modal.innerHTML = `
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>
-                    <img src="/static/icons/warning.png" alt="Warning" style="width:24px;height:24px;vertical-align:middle;margin-right:8px;">
-                    Clear Historical Data
-                </h3>
-                <button class="modal-close">×</button>
-            </div>
-            <div class="modal-body">
-                <p>Are you sure you want to clear all historical data?</p>
-                <p>This action cannot be undone.</p>
-            </div>
-            <div class="modal-footer">
-                <button class="modal-btn cancel">Cancel</button>
-                <button class="modal-btn confirm">Clear Data</button>
-            </div>
-        </div>
-    `;
-
-    document.body.appendChild(modal);
-    modal.classList.add('show');
-
-    const closeModal = () => {
-        modal.classList.remove('show');
-        setTimeout(() => modal.remove(), 300);
-    };
-
-    modal.querySelector('.modal-close').onclick = closeModal;
-    modal.querySelector('.cancel').onclick = closeModal;
-    
-    modal.querySelector('.confirm').onclick = () => {
-        fetch('/clear_history2', { method: 'POST' })
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'ok') {
-                    histChart.setData({ labels: [], datasets: [{ data: [] }] });
-                    alert('Historical data cleared successfully!');
-                } else {
-                    alert('Error: ' + data.message);
+    // Distance Chart
+    const ctxDist = document.getElementById('distanceChart').getContext('2d');
+    distanceChart = new Chart(ctxDist, {
+        type: 'scatter',
+        data: {
+            datasets: [
+                { label:'Ultrasonic 1', data:[], borderColor:'#007bff', backgroundColor:'#007bff', pointRadius:4, showLine:false },
+                { label:'Ultrasonic 2', data:[], borderColor:'#28a745', backgroundColor:'#28a745', pointRadius:4, showLine:false }
+            ]
+        },
+        options:{
+            responsive:true,
+            animation:false,
+            plugins:{
+                tooltip:{
+                    enabled:true,
+                    mode:'nearest',
+                    intersect:true,
+                    callbacks:{
+                        label: function(ctx){
+                            const d1 = ctx.dataset.label === 'Ultrasonic 1' ? ctx.raw.y : distanceChart.data.datasets[0].data[ctx.dataIndex]?.y;
+                            const d2 = ctx.dataset.label === 'Ultrasonic 2' ? ctx.raw.y : distanceChart.data.datasets[1].data[ctx.dataIndex]?.y;
+                            return `Time:${ctx.raw.x} | Dist1:${d1}cm | Dist2:${d2}cm`;
+                        }
+                    }
                 }
-                closeModal();
-            })
-            .catch(err => {
-                console.error(err);
-                alert('Error clearing historical data');
-                closeModal();
-            });
-    };
+            },
+            scales:{
+                x:{ beginAtZero:true, title:{display:true,text:'Time (index)'} },
+                y:{ beginAtZero:true, title:{display:true,text:'Distance (cm)'} }
+            }
+        }
+    });
 
-    modal.onclick = (e) => {
-        if (e.target === modal) closeModal();
-    };
+    // Environment Chart (Temp & Humidity)
+    const ctxEnv = document.getElementById('envChart').getContext('2d');
+    envChart = new Chart(ctxEnv, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [
+                { label:'Temperature (°C)', data:[], borderColor:'#ff5722', backgroundColor:'rgba(255,87,34,0.2)', fill:true, tension:0.3 },
+                { label:'Humidity (%)', data:[], borderColor:'#2196f3', backgroundColor:'rgba(33,150,243,0.2)', fill:true, tension:0.3 }
+            ]
+        },
+        options:{
+            responsive:true,
+            animation:false,
+            plugins:{
+                tooltip:{
+                    enabled:true,
+                    mode:'nearest',
+                    intersect:true
+                }
+            },
+            scales:{
+                x:{ beginAtZero:true, title:{display:true,text:'Time (index)'} },
+                y:{ beginAtZero:true, title:{display:true,text:'Value'} }
+            }
+        }
+    });
 }
 
-// Add these functions after the existing code
-function updateChartToggleIcon(chartId, isHidden) {
-    const toggleBtn = document.getElementById(`toggle${chartId}`);
-    if (toggleBtn) {
-        const img = toggleBtn.querySelector('img') || document.createElement('img');
-        img.src = `/static/icons/${isHidden ? 'unhide' : 'hide'}.png`;
-        img.alt = isHidden ? 'Show chart' : 'Hide chart';
-        img.style.width = '20px';
-        img.style.height = '20px';
-        if (!toggleBtn.contains(img)) {
-            toggleBtn.innerHTML = '';
-            toggleBtn.appendChild(img);
-        }
+async function fetchData(){
+    try{
+        const res = await fetch('/sensor2', {cache:'no-store'});
+        if(!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+
+        // Update cards
+        document.getElementById('val-dist1').innerText = data.distance1;
+        document.getElementById('val-dist2').innerText = data.distance2;
+        document.getElementById('val-temp').innerText = data.temperature;
+        document.getElementById('val-humid').innerText = data.humidity;
+
+        // Update distance chart
+        distanceChart.data.datasets[0].data.push({x:tick, y:data.distance1});
+        distanceChart.data.datasets[1].data.push({x:tick, y:data.distance2});
+        distanceChart.data.datasets.forEach(ds=>ds.data=ds.data.slice(-20));
+        distanceChart.update();
+
+        // Update environment chart
+        envChart.data.labels.push(tick);
+        envChart.data.datasets[0].data.push(data.temperature);
+        envChart.data.datasets[1].data.push(data.humidity);
+        envChart.data.labels = envChart.data.labels.slice(-20);
+        envChart.data.datasets.forEach(ds=>ds.data=ds.data.slice(-20));
+        envChart.update();
+
+        tick++;
+    } catch(err){
+        console.error('fetchData error', err);
     }
 }
+
+window.addEventListener('DOMContentLoaded', ()=>{
+    initCharts();
+    setInterval(fetchData, 1000);
+});
