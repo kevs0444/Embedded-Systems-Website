@@ -9,7 +9,9 @@
 </head>
 <body data-theme="light">
     <!-- Status Indicator -->
-    <div class="status" id="status">🟢</div>
+    <div class="status" id="status">
+        <span id="statusText">Standby</span>
+    </div>
 
     <!-- Error Notification -->
     <div class="notification error" id="errorNotif">
@@ -50,7 +52,7 @@
                 <a href="#" class="back-btn">←</a>
                 <div class="brand">
                     <h1>
-                        <img src="/static/icons/distance.png" alt="Distance Icon" style="width:28px;height:28px;vertical-align:middle;">
+                        <img src="/static/icons/ultrasonic.png" alt="Distance Icon" style="width:28px;height:28px;vertical-align:middle;">
                         Distance & Temp/Humidity Dashboard
                     </h1>
                     <small>by System Shapers</small>
@@ -107,7 +109,7 @@
             <!-- Distance Scatter Chart -->
             <div class="chart-card accent-border">
                 <div class="chart-header">
-                    <h3>Distance Sensor Readings (Scatter)</h3>
+                    <h3>Distance Sensor Readings</h3>
                 </div>
                 <div class="chart-wrapper">
                     <canvas id="distanceChart"></canvas>
