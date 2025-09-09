@@ -1,187 +1,238 @@
-/* ==========================
-   Act2.css - Distance Sensor Dashboard
-   Dark/Light Mode Fixed
-   ========================== */
+/* ================================
+   Activity 2 specific styles
+   Matching Activity 1 design
+   ================================ */
 
-/* ===== CSS Variables (copied from Act1) ===== */
-:root {
-    --bg: #f5f5f5;
-    --text: #222;
-    --card: #fff;
-    --border: #e0e0e0;
-    --accent: #4cafef;
-    --danger: #ff4d4d;
-    --warn: #ff9800;
-    --ok: #4caf50;
-    --shadow: 0 2px 8px rgba(0,0,0,0.05);
-    --base-font: 16px;
+/* --------------------------
+   Value Colors
+   -------------------------- */
+#dist1 { color: #ff5722; }
+#dist2 { color: #2196f3; }
+
+/* Badge colors for different statuses */
+.badge.ok { background: rgba(76, 175, 80, 0.1); color: var(--success); }
+.badge.warn { background: rgba(255, 152, 0, 0.1); color: var(--warning); }
+.badge.danger { background: rgba(244, 67, 54, 0.1); color: var(--danger); }
+
+/* --------------------------
+   Cards Layout - Single Row of 5
+   -------------------------- */
+.cards-container {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr); /* 5 cards side by side */
+    gap: 1rem;
+    width: 95%;
+    max-width: 1400px;
+    margin: 20px auto;
 }
 
-body[data-theme="dark"] {
-    --bg: #121212;
-    --text: #eee;
-    --card: #1e1e1e;
-    --border: #333;
-    --accent: #4cafef;
-    --danger: #ff4d4d;
-    --warn: #ff9800;
-    --ok: #4caf50;
-    --shadow: 0 2px 8px rgba(0,0,0,0.4);
+.card.accent-border {
+    padding: 1.2rem;
+    border-radius: 16px;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    border: 2px solid var(--accent);
+    backdrop-filter: blur(10px);
+    min-width: 180px;
 }
 
-/* ===== Body Background ===== */
-body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Segoe UI', sans-serif;
-    font-size: var(--base-font);
-    transition: all 0.3s ease;
+/* Theme-aware card background */
+[data-theme="light"] .card.accent-border {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
 }
 
-/* ===== Card Styling ===== */
-.card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px;
-    box-shadow: var(--shadow);
-    transition: all 0.3s ease;
+[data-theme="dark"] .card.accent-border {
+    background: linear-gradient(135deg, rgba(40, 40, 55, 0.9) 0%, rgba(30, 30, 40, 0.9) 100%);
 }
 
-.accent-border {
-    border-left: 6px solid var(--accent);
-    padding-left: 10px;
+/* Hover effect */
+.card.accent-border:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.15);
 }
 
-/* ===== Chart Wrappers ===== */
-.chart-wrapper {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 12px;
-    box-shadow: var(--shadow);
-    transition: all 0.3s ease;
+/* Card headings and values */
+.card h3 {
+    margin-bottom: 0.4rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-2);
 }
 
-/* ===== Sensor Value Cards ===== */
-.value {
-    font-size: calc(var(--base-font) * 2);
-    font-weight: 700;
+.card .value {
+    font-size: 1.4rem;
+    font-weight: bold;
+    margin-bottom: 0.4rem;
     color: var(--accent);
-    margin-bottom: 0.5rem;
 }
 
-.badge {
-    font-size: 0.9rem;
-    font-weight: 500;
-    padding: 0.2rem 0.6rem;
-    border-radius: 20px;
-    color: var(--text);
-    display: inline-block;
-}
-
-.badge.danger { background: var(--danger); color: #fff; }
-.badge.warn { background: var(--warn); color: #fff; }
-.badge.ok { background: var(--ok); color: #fff; }
-
-/* ===== Alert / Buzzer ===== */
+/* Alert display for buzzer card */
 .alert-display {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 1rem;
+    gap: 0.4rem;
 }
 
 .buzzer-icon img {
-    width: 40px;
-    height: 40px;
-    transition: transform 0.2s ease-in-out;
+    width: 36px;
+    height: 36px;
 }
 
-.buzzer-active img {
-    filter: drop-shadow(0 0 6px var(--danger));
-    animation: pulse 1s infinite;
-}
-
-@keyframes pulse {
-    0%   { transform: scale(1); }
-    50%  { transform: scale(1.15); }
-    100% { transform: scale(1); }
-}
-
-/* ===== Buttons ===== */
-.clear-data-btn {
-    background: var(--danger);
-    color: #fff;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: background 0.3s ease;
-}
-
-.clear-data-btn:hover {
-    background: #e60000;
-}
-
-/* ===== Status Indicator ===== */
-.status {
-    position: fixed;
-    top: 10px;
-    right: 10px;
-    background: var(--card);
-    padding: 0.3rem;
-    border-radius: 50%;
-    font-size: 0.8rem;
-    z-index: 20;
-    box-shadow: var(--shadow);
-    transition: all 0.3s ease;
-}
-
-/* ===== Charts (Canvas) ===== */
-canvas {
-    background: var(--card) !important;
-}
-
-/* ===== Layout / Responsive ===== */
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-.grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-    gap: 20px;
-}
-
+/* --------------------------
+   Charts Container
+   -------------------------- */
 .charts-container {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 2rem;
-    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    width: 95%;
+    max-width: 1200px;
+    margin: 30px auto;
 }
 
 .chart-card {
+    border-radius: 20px;
+    padding: 25px;
+    background: var(--card-bg, transparent);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    min-height: 420px;
+    backdrop-filter: blur(10px);
+    border: 2px solid var(--accent);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.chart-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+[data-theme="dark"] .chart-header {
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.chart-header h3 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.chart-controls {
+    display: flex;
+    gap: 12px;
+}
+
+.chart-wrapper {
+    flex: 1;
+    position: relative;
+    height: 350px;
+    width: 100%;
     border-radius: 12px;
-    padding: 16px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+canvas {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 12px;
+}
+
+.chartjs-render-monitor {
+    background: var(--chart-bg, rgba(255, 255, 255, 0.7));
+    border-radius: 12px;
+    padding: 15px;
+}
+
+[data-theme="dark"] .chartjs-render-monitor {
+    background: rgba(30, 30, 40, 0.7);
+}
+
+/* Theme-aware backgrounds for charts */
+[data-theme="light"] .chart-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    --chart-bg: rgba(255, 255, 255, 0.7);
+}
+
+[data-theme="dark"] .chart-card {
+    background: linear-gradient(135deg, rgba(40, 40, 55, 0.9) 0%, rgba(30, 30, 40, 0.9) 100%);
+    --chart-bg: rgba(30, 30, 40, 0.7);
+}
+
+/* --------------------------
+   Buttons hover effects
+   -------------------------- */
+.clear-data-btn {
+    padding: 10px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.05);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     transition: all 0.3s ease;
 }
 
+[data-theme="dark"] .clear-data-btn {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.clear-data-btn:hover {
+    transform: scale(1.15);
+    background: rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(244, 67, 54, 0.4);
+}
+
+[data-theme="dark"] .clear-data-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* --------------------------
+   Responsive adjustments
+   -------------------------- */
+@media (max-width: 1200px) {
+    .cards-container {
+        grid-template-columns: repeat(3, 1fr); /* 3 per row */
+    }
+}
+
 @media (max-width: 768px) {
+    .cards-container {
+        grid-template-columns: repeat(2, 1fr); /* 2 per row */
+    }
+
     .charts-container {
-        grid-template-columns: 1fr;
-        gap: 1rem;
+        width: 100%;
+        gap: 20px;
+    }
+
+    .chart-card {
+        min-height: 350px;
+        padding: 20px;
     }
 
     .chart-wrapper {
-        height: 250px;
+        height: 280px;
     }
 
-    .value {
-        font-size: calc(var(--base-font) * 1.5);
+    .chart-header h3 {
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 500px) {
+    .cards-container {
+        grid-template-columns: 1fr; /* stack vertically */
     }
 }

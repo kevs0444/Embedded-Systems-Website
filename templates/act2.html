@@ -9,9 +9,7 @@
 </head>
 <body data-theme="light">
     <!-- Status Indicator -->
-    <div class="status" id="status">
-        <span id="statusText">Standby</span>
-    </div>
+    <div class="status" id="status">🟢</div>
 
     <!-- Error Notification -->
     <div class="notification error" id="errorNotif">
@@ -66,43 +64,45 @@
 
     <!-- Main Content -->
     <main class="container">
-        <!-- Sensor Cards -->
-        <div class="grid">
-            <div class="card accent-border">
-                <h3>Distance Sensor 1</h3>
-                <div class="value" id="dist1">-- cm</div>
-            </div>
+            <!-- Sensor Cards -->
+            <div class="cards-container single-row">
+                <div class="card accent-border">
+                    <h3>Distance Sensor 1</h3>
+                    <div class="value" id="dist1">-- cm</div>
+                    <div class="badge" id="dist1Badge">--</div>
+                </div>
 
-            <div class="card accent-border">
-                <h3>Distance Sensor 2</h3>
-                <div class="value" id="dist2">-- cm</div>
-            </div>
+                <div class="card accent-border">
+                    <h3>Distance Sensor 2</h3>
+                    <div class="value" id="dist2">-- cm</div>
+                    <div class="badge" id="dist2Badge">--</div>
+                </div>
 
-            <div class="card accent-border">
-                <h3>Temperature</h3>
-                <div class="value" id="temp">-- °C</div>
-                <div class="badge" id="tempBadge">--</div>
-            </div>
-
-            <div class="card accent-border">
-                <h3>Humidity</h3>
-                <div class="value" id="humidity">-- %</div>
-                <div class="badge ok">Normal</div>
-            </div>
-
-            <div class="card accent-border">
-                <h3>Alert Status</h3>
-                <div class="alert-display">
-                    <div class="buzzer-icon" id="buzzer">
-                        <img src="/static/icons/buzzer.png" alt="Buzzer Icon">
-                    </div>
-                    <div class="badge" id="buzzerBadge">
-                        <span id="buzzerText">Standby</span>
-                        <img src="/static/icons/mute.png" alt="Mute Icon" id="buzzerStatusIcon">
+                <div class="card accent-border">
+                    <h3>Alert Status</h3>
+                    <div class="alert-display">
+                        <div class="buzzer-icon" id="buzzer">
+                            <img src="/static/icons/buzzer.png" alt="Buzzer Icon">
+                        </div>
+                        <div class="badge" id="buzzerBadge">
+                            <span id="buzzerText">Standby</span>
+                            <img src="/static/icons/mute.png" alt="Mute Icon" id="buzzerStatusIcon">
+                        </div>
                     </div>
                 </div>
+
+                <div class="card accent-border">
+                    <h3>Temperature</h3>
+                    <div class="value" id="temp">-- °C</div>
+                    <div class="badge" id="tempBadge">--</div>
+                </div>
+
+                <div class="card accent-border">
+                    <h3>Humidity</h3>
+                    <div class="value" id="humidity">-- %</div>
+                    <div class="badge" id="humBadge">--</div>
+                </div>
             </div>
-        </div>
 
         <!-- Charts Section -->
         <div class="charts-container">
@@ -119,7 +119,7 @@
             <!-- Temperature & Humidity Historical Chart -->
             <div class="chart-card accent-border">
                 <div class="chart-header">
-                    <h3>Temperature & Humidity History</h3>
+                    <h3>Temperature & Humidity</h3>
                     <div class="chart-controls">
                         <button class="clear-data-btn" id="clearData" title="Clear Data">
                             <img src="/static/icons/trash.png" alt="Clear Data">

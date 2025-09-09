@@ -1,0 +1,122 @@
+[
+    {
+        "distance1": 12.5,
+        "distance2": 62.9,
+        "temperature": 30.2,
+        "humidity": 75
+    },
+    {
+        "distance1": 12.0,
+        "distance2": 56.8,
+        "temperature": 30.3,
+        "humidity": 75
+    },
+    {
+        "distance1": 12.0,
+        "distance2": 70.5,
+        "temperature": 30.2,
+        "humidity": 75
+    },
+    {
+        "distance1": 12.3,
+        "distance2": 56.5,
+        "temperature": 0,
+        "humidity": 0
+    },
+    {
+        "distance1": 0,
+        "distance2": 49.5,
+        "temperature": 30.2,
+        "humidity": 75
+    },
+    {
+        "distance1": 12.1,
+        "distance2": 50.2,
+        "temperature": 30.2,
+        "humidity": 75
+    },
+    {
+        "distance1": 12.4,
+        "distance2": 62.4,
+        "temperature": 30.2,
+        "humidity": 75
+    },
+    {
+        "distance1": 12.1,
+        "distance2": 56.5,
+        "temperature": 30.2,
+        "humidity": 75
+    },
+    {
+        "distance1": 11.9,
+        "distance2": 49.3,
+        "temperature": 30.2,
+        "humidity": 75
+    },
+    {
+        "distance1": 12.0,
+        "distance2": 53.6,
+        "temperature": 30.2,
+        "humidity": 75
+    },
+    {
+        "distance1": 11.9,
+        "distance2": 43.9,
+        "temperature": 30.2,
+        "humidity": 75
+    },
+    {
+        "distance1": 12.1,
+        "distance2": 42.9,
+        "temperature": 30.3,
+        "humidity": 75
+    },
+    {
+        "distance1": 12.5,
+        "distance2": 43.1,
+        "temperature": 30.2,
+        "humidity": 75
+    },
+    {
+        "distance1": 12.2,
+        "distance2": 42.9,
+        "temperature": 30.2,
+        "humidity": 75
+    },
+    {
+        "distance1": 12.7,
+        "distance2": 69.8,
+        "temperature": 30.3,
+        "humidity": 75
+    },
+    {
+        "distance1": 12.1,
+        "distance2": 43.1,
+        "temperature": 0,
+        "humidity": 0
+    },
+    {
+        "distance1": 12.9,
+        "distance2": 44.1,
+        "temperature": 30.3,
+        "humidity": 75
+    },
+    {
+        "distance1": 12.3,
+        "distance2": 42.9,
+        "temperature": 30.3,
+        "humidity": 76
+    },
+    {
+        "distance1": 12.0,
+        "distance2": 57.5,
+        "temperature": 0,
+        "humidity": 0
+    },
+    {
+        "distance1": 12.0,
+        "distance2": 60.6,
+        "temperature": 30.3,
+        "humidity": 76
+    }
+]
