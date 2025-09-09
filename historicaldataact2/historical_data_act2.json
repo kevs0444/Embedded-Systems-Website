@@ -1,142 +1,122 @@
 [
     {
-        "time": "02:23:21",
-        "distance1": 13.7,
-        "distance2": 4.1,
-        "temperature": 27.4,
-        "humidity": 89
+        "distance1": 12.0,
+        "distance2": 0,
+        "temperature": 31.4,
+        "humidity": 79
     },
     {
-        "time": "02:23:24",
-        "distance1": 14.4,
-        "distance2": 3.6,
-        "temperature": 27.4,
-        "humidity": 89
+        "distance1": 12.0,
+        "distance2": 0,
+        "temperature": 0,
+        "humidity": 0
     },
     {
-        "time": "02:23:26",
-        "distance1": null,
-        "distance2": 4.9,
-        "temperature": 27.3,
-        "humidity": 89
+        "distance1": 11.9,
+        "distance2": 0,
+        "temperature": 31.4,
+        "humidity": 78
     },
     {
-        "time": "02:23:28",
-        "distance1": null,
-        "distance2": 4.1,
-        "temperature": 27.4,
-        "humidity": 89
+        "distance1": 0,
+        "distance2": 0,
+        "temperature": 31.4,
+        "humidity": 78
     },
     {
-        "time": "02:23:31",
-        "distance1": 15.2,
-        "distance2": 3.3,
-        "temperature": 27.3,
-        "humidity": 89
+        "distance1": 12.7,
+        "distance2": 0,
+        "temperature": 31.5,
+        "humidity": 78
     },
     {
-        "time": "02:23:33",
-        "distance1": 6.9,
-        "distance2": 4.1,
-        "temperature": 27.3,
-        "humidity": 89
+        "distance1": 12.3,
+        "distance2": 0,
+        "temperature": 31.4,
+        "humidity": 78
     },
     {
-        "time": "02:23:36",
-        "distance1": 9.1,
-        "distance2": 4.1,
-        "temperature": null,
-        "humidity": null
+        "distance1": 12.3,
+        "distance2": 0,
+        "temperature": 31.4,
+        "humidity": 78
     },
     {
-        "time": "02:23:39",
-        "distance1": null,
-        "distance2": 4.1,
-        "temperature": 27.3,
-        "humidity": 89
+        "distance1": 12.1,
+        "distance2": 0,
+        "temperature": 31.4,
+        "humidity": 78
     },
     {
-        "time": "02:23:41",
-        "distance1": 13.9,
-        "distance2": 4.1,
-        "temperature": 27.4,
-        "humidity": 89
+        "distance1": 0,
+        "distance2": 0,
+        "temperature": 31.5,
+        "humidity": 78
     },
     {
-        "time": "02:23:43",
-        "distance1": 13.7,
-        "distance2": 4.1,
-        "temperature": 27.3,
-        "humidity": 89
+        "distance1": 10.8,
+        "distance2": 0,
+        "temperature": 31.7,
+        "humidity": 77
     },
     {
-        "time": "02:23:46",
-        "distance1": 13.8,
-        "distance2": 4.1,
-        "temperature": 27.4,
-        "humidity": 89
+        "distance1": 11.9,
+        "distance2": 0,
+        "temperature": 31.7,
+        "humidity": 77
     },
     {
-        "time": "02:30:50",
-        "distance1": 5.3,
-        "distance2": 3.6,
-        "temperature": 27.4,
-        "humidity": 89
+        "distance1": 10.5,
+        "distance2": 0,
+        "temperature": 31.8,
+        "humidity": 77
     },
     {
-        "time": "02:30:52",
-        "distance1": 9.6,
-        "distance2": 3.6,
-        "temperature": 27.4,
-        "humidity": 89
+        "distance1": 12.3,
+        "distance2": 34.4,
+        "temperature": 31.8,
+        "humidity": 77
     },
     {
-        "time": "02:30:54",
-        "distance1": 4.9,
-        "distance2": 3.6,
-        "temperature": 27.5,
-        "humidity": 88
+        "distance1": 3.3,
+        "distance2": 132.1,
+        "temperature": 31.8,
+        "humidity": 77
     },
     {
-        "time": "02:30:56",
-        "distance1": 4.1,
-        "distance2": 3.6,
-        "temperature": 27.5,
-        "humidity": 88
+        "distance1": 11.3,
+        "distance2": 57.6,
+        "temperature": 31.0,
+        "humidity": 78
     },
     {
-        "time": "02:30:59",
-        "distance1": 4.0,
-        "distance2": 3.6,
-        "temperature": 27.6,
-        "humidity": 88
+        "distance1": 11.7,
+        "distance2": 48.1,
+        "temperature": 30.9,
+        "humidity": 78
     },
     {
-        "time": "02:31:01",
-        "distance1": 4.6,
-        "distance2": 3.6,
-        "temperature": 27.6,
-        "humidity": 88
+        "distance1": 12.3,
+        "distance2": 45.1,
+        "temperature": 0,
+        "humidity": 0
     },
     {
-        "time": "02:31:03",
-        "distance1": 3.8,
-        "distance2": 3.6,
-        "temperature": 27.6,
-        "humidity": 88
+        "distance1": 12.0,
+        "distance2": 57.0,
+        "temperature": 30.8,
+        "humidity": 79
     },
     {
-        "time": "02:31:05",
-        "distance1": 3.2,
-        "distance2": 4.1,
-        "temperature": 27.6,
-        "humidity": 88
+        "distance1": 12.6,
+        "distance2": 46.9,
+        "temperature": 30.7,
+        "humidity": 80
     },
     {
-        "time": "02:31:08",
-        "distance1": 13.3,
-        "distance2": 4.1,
-        "temperature": 27.6,
-        "humidity": 88
+        "distance1": 0,
+        "distance2": 24.1,
+        "temperature": 30.3,
+        "humidity": 82
     }
 ]

@@ -2,30 +2,142 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Activity 2 Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity 2 - Distance & Temp/Humidity</title>
+    <link rel="stylesheet" href="/static/css/style.css">
     <link rel="stylesheet" href="/static/css/act2.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body>
-    <h1>Activity 2 Dashboard</h1>
+<body data-theme="light">
+    <!-- Status Indicator -->
+    <div class="status" id="status">🟢</div>
 
-    <!-- Cards -->
-    <div class="cards-container">
-        <div class="card" id="card-dist1">Ultrasonic 1: <span id="val-dist1">0</span> cm</div>
-        <div class="card" id="card-dist2">Ultrasonic 2: <span id="val-dist2">0</span> cm</div>
-        <div class="card" id="card-temp">Temperature: <span id="val-temp">0</span> °C</div>
-        <div class="card" id="card-humid">Humidity: <span id="val-humid">0</span> %</div>
+    <!-- Error Notification -->
+    <div class="notification error" id="errorNotif">
+        <div class="notif-content">
+            <span class="notif-icon">
+                <img src="/static/icons/warning.png" alt="Error Icon">
+            </span>
+            <div>
+                <div class="notif-title">Sensor Error</div>
+                <div class="notif-msg">Distance or Temp/Humidity sensor is not responding</div>
+            </div>
+            <button class="notif-close" id="closeNotif">×</button>
+        </div>
     </div>
 
-    <!-- Charts -->
-    <div class="chart-container">
-        <canvas id="distanceChart"></canvas>
+    <!-- Back Confirmation Modal -->
+    <div class="modal" id="backModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Confirm Navigation</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to go back to the main menu?</p>
+                <p>This will stop the sensor monitoring and clean up GPIO resources.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn cancel" id="modalCancel">Cancel</button>
+                <button class="modal-btn confirm" id="modalConfirm">Yes, Go Back</button>
+            </div>
+        </div>
     </div>
 
-    <div class="chart-container">
-        <canvas id="envChart"></canvas>
-    </div>
+    <!-- Header -->
+    <header>
+        <div class="header-content">
+            <div class="header-nav">
+                <a href="#" class="back-btn">←</a>
+                <div class="brand">
+                    <h1>
+                        <img src="/static/icons/distance.png" alt="Distance Icon" style="width:28px;height:28px;vertical-align:middle;">
+                        Distance & Temp/Humidity Dashboard
+                    </h1>
+                    <small>by System Shapers</small>
+                </div>
+            </div>
+            <button class="theme-btn" id="themeBtn">
+                <img src="/static/icons/dark-mode.png" alt="Switch Theme" class="theme-icon" id="themeIcon">
+            </button>
+        </div>
+    </header>
 
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Sensor Cards -->
+        <div class="grid">
+            <div class="card accent-border">
+                <h3>Distance Sensor 1</h3>
+                <div class="value" id="dist1">-- cm</div>
+            </div>
+
+            <div class="card accent-border">
+                <h3>Distance Sensor 2</h3>
+                <div class="value" id="dist2">-- cm</div>
+            </div>
+
+            <div class="card accent-border">
+                <h3>Temperature</h3>
+                <div class="value" id="temp">-- °C</div>
+                <div class="badge" id="tempBadge">--</div>
+            </div>
+
+            <div class="card accent-border">
+                <h3>Humidity</h3>
+                <div class="value" id="humidity">-- %</div>
+                <div class="badge ok">Normal</div>
+            </div>
+
+            <div class="card accent-border">
+                <h3>Alert Status</h3>
+                <div class="alert-display">
+                    <div class="buzzer-icon" id="buzzer">
+                        <img src="/static/icons/buzzer.png" alt="Buzzer Icon">
+                    </div>
+                    <div class="badge" id="buzzerBadge">
+                        <span id="buzzerText">Standby</span>
+                        <img src="/static/icons/mute.png" alt="Mute Icon" id="buzzerStatusIcon">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="charts-container">
+            <!-- Distance Scatter Chart -->
+            <div class="chart-card accent-border">
+                <div class="chart-header">
+                    <h3>Distance Sensor Readings (Scatter)</h3>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="distanceChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Temperature & Humidity Historical Chart -->
+            <div class="chart-card accent-border">
+                <div class="chart-header">
+                    <h3>Temperature & Humidity History</h3>
+                    <div class="chart-controls">
+                        <button class="clear-data-btn" id="clearData" title="Clear Data">
+                            <img src="/static/icons/trash.png" alt="Clear Data">
+                        </button>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="histChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            Last update: <span id="time">--</span>
+        </div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="/static/js/act2.js"></script>
 </body>
 </html>

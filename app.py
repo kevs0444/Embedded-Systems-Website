@@ -3,12 +3,14 @@ from flask import Flask, render_template, jsonify, send_from_directory, redirect
 import os
 import signal
 import time
+import threading
 import json
-import act1, act2
+import act1
+import act2  # Updated version with deferred GPIO setup
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 
-# Track current activity
+# -------------------- Globals --------------------
 current_activity = None  # 'act1', 'act2', or None
 
 # Path for saving historical data (Act2)
@@ -18,13 +20,7 @@ ACT2_HISTORY_FILE = os.path.join(ACT2_HISTORY_DIR, "historical_data_act2.json")
 # -------------------- Signal handler --------------------
 def signal_handler(signum, frame):
     print("\nCleaning up and shutting down...")
-    global current_activity
-    if current_activity == 'act1':
-        act1.cleanup()
-    elif current_activity == 'act2':
-        act2.cleanup()
-        save_act2_history()
-    current_activity = None
+    stop_current_activity()
     exit(0)
 
 # -------------------- Helper Functions --------------------
@@ -34,6 +30,7 @@ def stop_current_activity():
         act1.cleanup()
         print("Act1 monitoring stopped and GPIO cleaned up")
     elif current_activity == 'act2':
+        act2.stop_act2_loop()
         act2.cleanup()
         save_act2_history()
         print("Act2 monitoring stopped and GPIO cleaned up")
@@ -112,17 +109,37 @@ def act2_page():
         stop_current_activity()
         time.sleep(1)
     load_act2_history()
-    success = act2.start_act2()
+    success = act2.start_act2_loop()
     current_activity = 'act2' if success else None
     return render_template("act2.html")
 
-@app.route("/sensor2")
-def sensor_data2():
-    return jsonify(act2.get_sensor_data())
+# Correct endpoint for act2.js fetch
+@app.route("/act2_sensor")
+def act2_sensor():
+    data = act2.get_sensor_data()
+    # Add buzzer status for UI
+    buz_status = "ON" if data.get("distance1",0)>=12 or data.get("distance2",0)>=12 else "OFF"
+    data["buzzer"] = buz_status
+    return jsonify(data)
 
 @app.route("/history2")
 def history2():
     return jsonify(act2.get_history())
+
+@app.route("/save_hist", methods=["POST"])
+def save_hist():
+    try:
+        payload = request.json
+        if payload:
+            # optional: you could update act2 internal history if needed
+            print("Received historical data save:", len(payload.get("labels",[])), "points")
+        return jsonify({"status":"ok"})
+    except Exception as e:
+        return jsonify({"status":"error","message":str(e)}),500
+
+@app.route("/clear_hist", methods=["POST"])
+def clear_hist():
+    return clear_history2()
 
 @app.route("/clear_history2", methods=["POST"])
 def clear_history2():
@@ -132,7 +149,7 @@ def clear_history2():
             json.dump([], f, indent=2)
         act2.set_history([])
         print("Act2 history cleared")
-        return jsonify({"status": "ok", "message": "Historical data cleared"})
+        return jsonify({"status": "success", "message": "Historical data cleared"})
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
@@ -140,6 +157,7 @@ def clear_history2():
 def stop_act2():
     global current_activity
     if current_activity == 'act2':
+        act2.stop_act2_loop()
         act2.cleanup()
         save_act2_history()
         current_activity = None
@@ -156,19 +174,11 @@ def send_static(path):
 
 # -------------------- Main --------------------
 if __name__ == "__main__":
-    # Setup signal handlers
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
-
-    # Load Act2 history
     load_act2_history()
-
     try:
         app.run(debug=True, host="0.0.0.0", port=5000)
     finally:
-        if current_activity == 'act1':
-            act1.cleanup()
-        elif current_activity == 'act2':
-            act2.cleanup()
-            save_act2_history()
+        stop_current_activity()
         print("GPIO cleaned up. Goodbye!")

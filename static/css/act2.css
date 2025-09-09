@@ -1,36 +1,188 @@
-body {
-    font-family: Arial, sans-serif;
-    text-align: center;
-    background: #f0f0f0;
-    margin: 20px;
+/* ==========================
+   act2.css - Activity 2 Page
+   ========================== */
+
+/* Container and Grid Overrides */
+.charts-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    margin-top: 2rem;
 }
 
-h1 {
-    color: #333;
+/* Chart Cards */
+.chart-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    transition: all 0.2s;
 }
 
-/* Cards styling */
-.cards-container {
+/* Chart Header */
+.chart-header {
     display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-bottom: 30px;
-    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
 }
 
-.card {
-    background: #fff;
-    border-radius: 10px;
-    padding: 20px 25px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    font-size: 1.2rem;
-    min-width: 150px;
+.chart-header h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text);
 }
 
-/* Charts styling */
+/* Chart Controls */
+.chart-controls {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.clear-data-btn {
+    background: transparent;
+    border: 1px solid var(--danger);
+    border-radius: 4px;
+    padding: 0.3rem 0.6rem;
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: var(--danger);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    transition: all 0.2s;
+}
+
+.clear-data-btn:hover {
+    background: rgba(244, 67, 54, 0.1);
+}
+
+.clear-data-btn img {
+    width: 14px;
+    height: 14px;
+}
+
+/* Chart Wrapper */
+.chart-wrapper {
+    width: 100%;
+    height: 300px;
+    position: relative;
+}
+
 canvas {
-    background: #fff;
-    border: 1px solid #ccc;
-    margin-top: 20px;
-    max-width: 800px;
+    width: 100%;
+    height: 100%;
+}
+
+/* Tooltip for Charts */
+.chart-tooltip {
+    position: absolute;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.5rem;
+    font-size: 0.8rem;
+    box-shadow: var(--shadow);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s;
+    z-index: 100;
+}
+
+.chart-tooltip.show {
+    opacity: 1;
+}
+
+.tooltip-time {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: var(--text);
+}
+
+.tooltip-data {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.tooltip-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.75rem;
+}
+
+.tooltip-color {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+}
+
+/* Sensor Value Cards */
+.value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+}
+
+.badge {
+    font-size: 0.8rem;
+    font-weight: 500;
+    padding: 0.2rem 0.5rem;
+    border-radius: 20px;
+}
+
+.alert-display {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.buzzer-icon img {
+    width: 40px;
+    height: 40px;
+    transition: transform 0.2s ease-in-out;
+}
+
+.buzzer-active img {
+    filter: drop-shadow(0 0 6px var(--danger));
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0%   { transform: scale(1); }
+    50%  { transform: scale(1.15); }
+    100% { transform: scale(1); }
+}
+
+/* Status Indicator */
+.status {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    background: var(--card);
+    padding: 0.3rem;
+    border-radius: 50%;
+    font-size: 0.8rem;
+    z-index: 20;
+    box-shadow: var(--shadow);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .charts-container {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .chart-wrapper {
+        height: 250px;
+    }
+
+    .value {
+        font-size: 1.8rem;
+    }
 }
