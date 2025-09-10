@@ -6,7 +6,6 @@
 let distanceChart = null, histChart = null;
 let errorNotificationShown = false;
 let dist1Data = [], dist2Data = [], distLabels = [];
-let tempHistData = [], humHistData = [], histLabels5s = [];
 let tempBuffer = [], humBuffer = [], minStats = [];
 let lastTemp, lastHum;
 
@@ -16,7 +15,9 @@ document.addEventListener('DOMContentLoaded', () => {
     initCharts();
     initNotifications();
     fetchData();
+    loadHistoricalData(); // Load historical data on startup
     setInterval(fetchData, 2000); // fetch every 2s
+    setInterval(loadHistoricalData, 60000); // refresh history every 1min like act1.js
     setInterval(updateMinuteStats, 60000); // every 1 min
 
     const clearBtn = document.getElementById('clearData');
@@ -35,6 +36,75 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add stats table below the chart
     addStatsTable();
 });
+
+// ----------------- Load Historical Data -----------------
+async function loadHistoricalData() {
+    try {
+        const resp = await fetch('/act2_hist');
+        if (!resp.ok) throw new Error('Failed to fetch historical data');
+        const data = await resp.json();
+        
+        // Expected format: { labels: [...], avgTemp: [...], peakTemp: [...], avgHum: [...], peakHum: [...] }
+        const responseData = data.data || data;
+        const rawLabels = responseData.labels || [];
+        
+        if (!rawLabels.length) {
+            if (histChart) {
+                histChart.data.labels = [];
+                histChart.data.datasets.forEach(ds => ds.data = []);
+                histChart.update();
+            }
+            // Clear stats table too
+            minStats = [];
+            renderStatsTable();
+            return;
+        }
+
+        const labels = rawLabels;
+        const avgTemp = responseData.avgTemp || responseData.avg_temp || [];
+        const peakTemp = responseData.peakTemp || responseData.peak_temp || [];
+        const avgHum = responseData.avgHum || responseData.avg_hum || [];
+        const peakHum = responseData.peakHum || responseData.peak_hum || [];
+
+        const L = labels.length;
+        
+        // Use the same normalization logic as act1.js
+        function normalizeArray(arr, len) {
+            if (!Array.isArray(arr)) arr = [];
+            if (arr.length > len) return arr.slice(-len);
+            if (arr.length === len) return arr;
+            return Array(len - arr.length).fill(null).concat(arr);
+        }
+
+        // FIX: Apply normalization to match the length of labels
+        histChart.data.labels = labels;
+        histChart.data.datasets[0].data = normalizeArray(avgTemp, L);
+        histChart.data.datasets[1].data = normalizeArray(peakTemp, L);
+        histChart.data.datasets[2].data = normalizeArray(avgHum, L);
+        histChart.data.datasets[3].data = normalizeArray(peakHum, L);
+
+        histChart.update();
+
+        // NEW: Rebuild minStats from the chart data to keep them in sync
+        minStats = [];
+        for (let i = 0; i < labels.length; i++) {
+            if (avgTemp[i] !== null && avgHum[i] !== null) {
+                minStats.push({
+                    time: labels[i],
+                    avgTemp: avgTemp[i],
+                    peakTemp: peakTemp[i] || avgTemp[i], // Fallback if peak not available
+                    avgHum: avgHum[i],
+                    peakHum: peakHum[i] || avgHum[i]    // Fallback if peak not available
+                });
+            }
+        }
+        
+        renderStatsTable();
+        
+    } catch (err) {
+        console.error('Error loading historical data:', err);
+    }
+}
 
 // ----------------- Modal -----------------
 function showBackModal() { 
@@ -104,6 +174,9 @@ function initCharts() {
     const distCtx = document.getElementById('distanceChart').getContext('2d');
     const histCtx = document.getElementById('histChart').getContext('2d');
 
+    const tempColor = '#ff5722';
+    const humColor = '#2196f3';
+
     const baseOptions = {
         responsive: true,
         maintainAspectRatio: false,
@@ -125,7 +198,6 @@ function initCharts() {
                         return '';
                     },
                     label: (ctx) => {
-                        // 🔹 Fix: Prevent duplicate peak labels
                         if (ctx && ctx.dataset && ctx.dataset.data[ctx.dataIndex] && ctx.parsed.y != null) {
                             return `${ctx.dataset.label}: ${ctx.parsed.y}`;
                         }
@@ -191,7 +263,7 @@ function initCharts() {
         }
     });
 
-    // Historical chart (Avg + Peak per min with vertical lines)
+    // Historical chart - match act1.js style
     histChart = new Chart(histCtx, {
         type: 'line',
         data: { 
@@ -200,38 +272,40 @@ function initCharts() {
                 { 
                     label: 'Avg Temp (°C)', 
                     data: [], 
-                    borderColor: '#ff5722',   // orange
-                    borderDash: [6, 6],       // dotted
-                    borderWidth: 2,
-                    fill: false, 
-                    pointRadius: 0            // no circles
+                    borderColor: tempColor,
+                    backgroundColor: 'rgba(255,87,34,0.06)', 
+                    borderDash: [6,4], 
+                    fill: true, 
+                    pointRadius: 0 
                 },
                 { 
                     label: 'Peak Temp (°C)', 
                     data: [], 
-                    borderColor: '#ff5722',   // orange
-                    borderWidth: 2,
-                    fill: false, 
-                    pointRadius: 5,           // circle markers
-                    pointBackgroundColor: '#ff5722'
+                    borderColor: tempColor,
+                    backgroundColor: 'rgba(255,87,34,0.08)', 
+                    fill: true, 
+                    pointRadius: 8, 
+                    pointHoverRadius: 12, 
+                    pointBackgroundColor: tempColor 
                 },
                 { 
                     label: 'Avg Hum (%)', 
                     data: [], 
-                    borderColor: '#2196f3',   // blue
-                    borderDash: [6, 6],       // dotted
-                    borderWidth: 2,
-                    fill: false, 
-                    pointRadius: 0            // no circles
+                    borderColor: humColor, 
+                    backgroundColor: 'rgba(33,150,243,0.06)', 
+                    borderDash: [6,4], 
+                    fill: true, 
+                    pointRadius: 0 
                 },
                 { 
                     label: 'Peak Hum (%)', 
                     data: [], 
-                    borderColor: '#2196f3',   // blue
-                    borderWidth: 2,
-                    fill: false, 
-                    pointRadius: 5,           // circle markers
-                    pointBackgroundColor: '#2196f3'
+                    borderColor: humColor, 
+                    backgroundColor: 'rgba(33,150,243,0.08)', 
+                    fill: true, 
+                    pointRadius: 8, 
+                    pointHoverRadius: 12, 
+                    pointBackgroundColor: humColor 
                 }
             ]
         },
@@ -239,34 +313,20 @@ function initCharts() {
             responsive: true,
             maintainAspectRatio: false,
             animation: false,
-            interaction: { mode: 'x', intersect: false },
+            scales: {
+                x: { title: { display: true, text: 'Time' } },
+                y: { beginAtZero: true, title: { display: true, text: 'Values' }, max: 100 }
+            },
             plugins: {
                 tooltip: {
                     callbacks: {
-                        label: function(ctx) {
-                            if (ctx.dataset.data[ctx.dataIndex] && ctx.parsed.y != null) {
-                                return `${ctx.dataset.label}: ${ctx.parsed.y}`;
-                            }
-                            return null; // 🔹 Prevent duplicate hover
-                        }
+                        label: ctx => ctx.parsed.y != null ? `${ctx.dataset.label}: ${ctx.parsed.y}` : null
                     }
                 }
             },
-            scales: {
-                x: {
-                    type: 'category',
-                    title: { display: true, text: 'Time (h:m:s)' },
-                    ticks: { autoSkip: true }
-                },
-                y: {
-                    beginAtZero: true,
-                    max: 100, // 🔹 Fix: cap at 100 for temp & humidity
-                    title: { display: true, text: 'Values' }
-                }
-            }
+            elements: { line: { tension: 0.3 } }
         }
     });
-
 }
 
 // ----------------- Update Chart Colors -----------------
@@ -306,17 +366,42 @@ async function fetchData() {
 
         // ---- Distance chart ----
         const now = Math.round(Date.now() / 1000);
+        
+        // Clear existing data before adding new points
+        if (distLabels.length >= 20) {
+            distLabels.shift();
+            dist1Data.shift();
+            dist2Data.shift();
+        }
+        
         distLabels.push(now);
         dist1Data.push({ x: now, y: d1 });
         dist2Data.push({ x: now, y: d2 });
         
-        if (dist1Data.length > 20) { 
-            dist1Data.shift(); 
-            dist2Data.shift(); 
-            distLabels.shift(); 
-        }
-        distanceChart.data.datasets[0].data = dist1Data;
-        distanceChart.data.datasets[1].data = dist2Data;
+        // Update chart with the complete datasets
+        distanceChart.data = {
+            datasets: [
+                { 
+                    label: 'Distance 1', 
+                    data: [...dist1Data],
+                    backgroundColor: '#ff5722', 
+                    borderColor: '#ff5722', 
+                    borderWidth: 2, 
+                    pointRadius: 6, 
+                    pointHoverRadius: 10 
+                },
+                { 
+                    label: 'Distance 2', 
+                    data: [...dist2Data],
+                    backgroundColor: '#2196f3', 
+                    borderColor: '#2196f3', 
+                    borderWidth: 2, 
+                    pointRadius: 6, 
+                    pointHoverRadius: 10 
+                }
+            ]
+        };
+        
         distanceChart.update();
 
         // ---- Buffers for 1-min avg/peak ----
@@ -332,73 +417,35 @@ async function fetchData() {
     }
 }
 
-// ----------------- Update 5s Chart -----------------
-
-function update5sChart() {
-    if (typeof lastTemp === 'undefined' || typeof lastHum === 'undefined') return;
-
-    const now = new Date().toLocaleTimeString();
-    histLabels5s.push(now);
-    tempHistData.push(lastTemp);
-    humHistData.push(lastHum);
-
-    // keep only last 12 (1 minute worth at 5s interval)
-    if (histLabels5s.length > 12) {
-        histLabels5s.shift();
-        tempHistData.shift();
-        humHistData.shift();
-    }
-
-    // update chart datasets for raw line
-    histChart.data.labels = histLabels5s;
-    histChart.data.datasets[0].data = tempHistData; // Temp 5s values
-    histChart.data.datasets[2].data = humHistData;  // Hum 5s values
-
-    histChart.update();
-}
-
 // ----------------- Update 1-min Avg/Peak -----------------
 function updateMinuteStats() {
     if (!tempBuffer.length || !humBuffer.length) return;
 
     const avgTemp = (tempBuffer.reduce((a,b)=>a+b,0)/tempBuffer.length).toFixed(1);
-    const avgHum = (humBuffer.reduce((a,b)=>a+b,0)/tempBuffer.length).toFixed(1);
     const peakTemp = Math.max(...tempBuffer);
+    const avgHum = (humBuffer.reduce((a,b)=>a+b,0)/humBuffer.length).toFixed(1);
     const peakHum = Math.max(...humBuffer);
     const label = new Date().toLocaleTimeString();
 
-    // Add vertical dotted line at start of new 1-minute cycle
-    if (!histChart.options.plugins.annotation) histChart.options.plugins.annotation = { annotations: {} };
-    histChart.options.plugins.annotation.annotations[`cycle_${label}`] = {
-        type: 'line',
-        xMin: label,
-        xMax: label,
-        borderColor: '#999',
-        borderWidth: 1,
-        borderDash: [4, 4]
-    };
-
-    // Push data for this 1-min cycle
-    histChart.data.labels.push(label);
-    histChart.data.datasets[0].data.push(avgTemp);    // Avg Temp
-    histChart.data.datasets[1].data.push(peakTemp);   // Peak Temp
-    histChart.data.datasets[2].data.push(avgHum);     // Avg Hum
-    histChart.data.datasets[3].data.push(peakHum);    // Peak Hum
-
-    // Maintain last N cycles in chart, but old data remains
-    const maxCycles = 12; // e.g., last 12 minutes visible
-    if (histChart.data.labels.length > maxCycles) {
-        // shift data visually (we don’t remove old data points, just shift view)
-        histChart.options.scales.x.min = histChart.data.labels[histChart.data.labels.length - maxCycles];
-        histChart.options.scales.x.max = histChart.data.labels[histChart.data.labels.length - 1];
-    }
-
-    histChart.update();
-
     // Save for stats table
-    minStats.push({ time: label, avgTemp, avgHum, peakTemp, peakHum });
+    minStats.push({ time: label, avgTemp, peakTemp, avgHum, peakHum });
     if (minStats.length > 10) minStats.shift();
     renderStatsTable();
+
+    // ADD THIS: Send minute stats to server for JSON storage
+    fetch('/save_minute_stats', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            time: label,
+            avgTemp,
+            peakTemp,
+            avgHum,
+            peakHum
+        })
+    }).catch(err => console.error('Error saving minute stats:', err));
 
     tempBuffer = [];
     humBuffer = [];
@@ -416,6 +463,7 @@ function addStatsTable() {
     chartCard.appendChild(statsDiv);
     renderStatsTable();
 }
+
 function renderStatsTable() {
     const statsDiv = document.getElementById('statsTableDiv');
     if (!statsDiv) return;
@@ -507,6 +555,13 @@ function clearHistoricalData() {
                     histChart.data.datasets.forEach(ds => ds.data = []); 
                     histChart.update();
                 }
+                // Also clear the stats table
+                minStats = [];
+                renderStatsTable();
+                
+                // Reload historical data to ensure sync
+                loadHistoricalData();
+                
                 alert('Historical data cleared!');
             } else alert('Error clearing data');
         })
@@ -515,7 +570,3 @@ function clearHistoricalData() {
             alert('Error clearing data. Please try again.');
         });
 }
-
-setInterval(fetchData, 2000);     // still fetch every 2s
-setInterval(update5sChart, 5000); // push to chart every 5s
-setInterval(updateMinuteStats, 60000); // overlay avg+peak every 1 min

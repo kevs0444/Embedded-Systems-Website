@@ -7,6 +7,7 @@ import threading
 import json
 import act1
 import act2  # Updated version with deferred GPIO setup
+from datetime import datetime, timedelta
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
 
@@ -16,6 +17,9 @@ current_activity = None  # 'act1', 'act2', or None
 # Path for saving historical data (Act2)
 ACT2_HISTORY_DIR = "/home/systemshapers/Embedded-Systems-Website/historicaldataact2"
 ACT2_HISTORY_FILE = os.path.join(ACT2_HISTORY_DIR, "historical_data_act2.json")
+
+# Track last save time for Act2 sensor data
+last_act2_save = time.time()
 
 # -------------------- Signal handler --------------------
 def signal_handler(signum, frame):
@@ -52,17 +56,156 @@ def load_act2_history():
     """Load Act2 history from JSON file."""
     try:
         if os.path.exists(ACT2_HISTORY_FILE):
+            # Check if file is empty
+            if os.path.getsize(ACT2_HISTORY_FILE) == 0:
+                print("Act2 history file is empty, starting fresh")
+                # Initialize with empty array
+                with open(ACT2_HISTORY_FILE, "w") as f:
+                    json.dump([], f)
+                return
+            
             with open(ACT2_HISTORY_FILE, "r") as f:
-                history = json.load(f)
+                content = f.read().strip()
+                if not content:  # Empty file
+                    print("Act2 history file is empty, starting fresh")
+                    # Initialize with empty array
+                    with open(ACT2_HISTORY_FILE, "w") as f:
+                        json.dump([], f)
+                    return
+                    
+                history = json.loads(content)
+                
             if isinstance(history, list):
                 act2.set_history(history)
                 print(f"Act2 history loaded ({len(history)} records)")
             else:
                 print("Invalid Act2 history format, starting fresh")
+                # Initialize with empty array
+                with open(ACT2_HISTORY_FILE, "w") as f:
+                    json.dump([], f)
         else:
-            print("No Act2 history file found, starting fresh")
+            print("No Act2 history file found, creating empty one")
+            if not os.path.exists(ACT2_HISTORY_DIR):
+                os.makedirs(ACT2_HISTORY_DIR, exist_ok=True)
+            # Create empty file
+            with open(ACT2_HISTORY_FILE, "w") as f:
+                json.dump([], f)
+    except json.JSONDecodeError:
+        print("JSON decode error in Act2 history file, creating new one")
+        # Create empty file
+        with open(ACT2_HISTORY_FILE, "w") as f:
+            json.dump([], f)
     except Exception as e:
         print(f"Error loading Act2 history: {e}")
+
+def save_sensor_data_to_history(sensor_data):
+    """Save individual sensor readings to history file"""
+    try:
+        if not os.path.exists(ACT2_HISTORY_DIR):
+            os.makedirs(ACT2_HISTORY_DIR, exist_ok=True)
+        
+        # Load existing data
+        if os.path.exists(ACT2_HISTORY_FILE):
+            with open(ACT2_HISTORY_FILE, "r") as f:
+                existing_data = json.load(f)
+        else:
+            existing_data = []
+        
+        # Add timestamp and append new data
+        data_with_timestamp = {
+            "temperature": float(sensor_data.get('temperature', 0)),
+            "humidity": float(sensor_data.get('humidity', 0)),
+            "distance1": float(sensor_data.get('distance1', 0)),
+            "distance2": float(sensor_data.get('distance2', 0)),
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        # Only add valid readings (not 0 values)
+        if (data_with_timestamp["temperature"] > 0 and 
+            data_with_timestamp["humidity"] > 0):
+            existing_data.append(data_with_timestamp)
+            
+            # Keep only last 100 records to prevent file from growing too large
+            existing_data = existing_data[-100:]
+            
+            # Save back to file
+            with open(ACT2_HISTORY_FILE, "w") as f:
+                json.dump(existing_data, f, indent=2)
+            
+            print(f"Sensor data saved: Temp: {data_with_timestamp['temperature']}°C, Hum: {data_with_timestamp['humidity']}%")
+    except Exception as e:
+        print(f"Error saving sensor data to history: {e}")
+
+def process_act2_historical_data(raw_data):
+    """Process Act2 raw data into the format expected by the frontend chart"""
+    if not isinstance(raw_data, list) or len(raw_data) == 0:
+        return {
+            "labels": [],
+            "avg_temp": [],
+            "peak_temp": [],
+            "avg_hum": [],
+            "peak_hum": []
+        }
+    
+    # Group data by minute
+    minute_data = {}
+    for reading in raw_data:
+        # Check if we have the required fields
+        if not all(key in reading for key in ['temperature', 'humidity', 'timestamp']):
+            continue
+            
+        try:
+            # Skip invalid readings
+            if reading['temperature'] in [0, None, "0"] or reading['humidity'] in [0, None, "0"]:
+                continue
+                
+            # Parse timestamp and round to minute
+            timestamp_str = reading['timestamp']
+            if 'Z' in timestamp_str:
+                timestamp = datetime.fromisoformat(timestamp_str.replace('Z', '+00:00'))
+            else:
+                timestamp = datetime.fromisoformat(timestamp_str)
+                
+            minute_key = timestamp.replace(second=0, microsecond=0)
+            
+            if minute_key not in minute_data:
+                minute_data[minute_key] = {
+                    'temps': [],
+                    'hums': []
+                }
+            
+            # Add valid readings
+            minute_data[minute_key]['temps'].append(float(reading['temperature']))
+            minute_data[minute_key]['hums'].append(float(reading['humidity']))
+        except (ValueError, KeyError) as e:
+            print(f"Error processing timestamp: {e}")
+            continue
+    
+    # Sort by time and process
+    sorted_minutes = sorted(minute_data.keys())
+    labels = []
+    avg_temps = []
+    peak_temps = []
+    avg_hums = []
+    peak_hums = []
+    
+    for minute in sorted_minutes:
+        data = minute_data[minute]
+        if data['temps'] and data['hums']:
+            labels.append(minute.strftime('%H:%M'))
+            avg_temps.append(round(sum(data['temps']) / len(data['temps']), 1))
+            peak_temps.append(round(max(data['temps']), 1))
+            avg_hums.append(round(sum(data['hums']) / len(data['hums']), 1))
+            peak_hums.append(round(max(data['hums']), 1))
+    
+    # Return the last 20 minutes
+    return {
+        "labels": labels[-20:],
+        "avg_temp": avg_temps[-20:],
+        "peak_temp": peak_temps[-20:],
+        "avg_hum": avg_hums[-20:],
+        "peak_hum": peak_hums[-20:]
+    }
 
 # -------------------- Main Menu --------------------
 @app.route("/")
@@ -111,16 +254,112 @@ def act2_page():
     load_act2_history()
     success = act2.start_act2_loop()
     current_activity = 'act2' if success else None
+    
+    # Force refresh of historical data on page load
+    try:
+        if os.path.exists(ACT2_HISTORY_FILE) and os.path.getsize(ACT2_HISTORY_FILE) > 0:
+            with open(ACT2_HISTORY_FILE, "r") as f:
+                content = f.read().strip()
+                if content:
+                    raw_data = json.loads(content)
+                    # Update the in-memory history
+                    act2.set_history(raw_data)
+    except Exception as e:
+        print(f"Error refreshing Act2 history on page load: {e}")
+    
     return render_template("act2.html")
 
 # Correct endpoint for act2.js fetch
 @app.route("/act2_sensor")
 def act2_sensor():
+    global last_act2_save
     data = act2.get_sensor_data()
+    
     # Add buzzer status for UI
     buz_status = "ON" if data.get("distance1",0)>=12 or data.get("distance2",0)>=12 else "OFF"
     data["buzzer"] = buz_status
+    
+    # Save sensor data to history file every 30 seconds
+    current_time = time.time()
+    if current_time - last_act2_save >= 30:  # Save every 30 seconds
+        try:
+            save_sensor_data_to_history(data)
+            last_act2_save = current_time
+        except Exception as e:
+            print(f"Error saving sensor data: {e}")
+    
     return jsonify(data)
+
+@app.route("/act2_hist")
+def act2_hist():
+    """Return historical data for Act2 in the same format as Act1"""
+    try:
+        # First try to load from the JSON file
+        if os.path.exists(ACT2_HISTORY_FILE) and os.path.getsize(ACT2_HISTORY_FILE) > 0:
+            with open(ACT2_HISTORY_FILE, "r") as f:
+                content = f.read().strip()
+                if content:  # Only parse if file has content
+                    raw_data = json.loads(content)
+                else:
+                    raw_data = []
+        else:
+            # Fall back to in-memory history if file doesn't exist
+            raw_data = act2.get_history()
+        
+        # Process the data into chart format
+        processed_data = process_act2_historical_data(raw_data)
+        return jsonify(processed_data)
+    except json.JSONDecodeError:
+        print("JSON decode error in Act2 history file, returning empty data")
+        return jsonify({
+            "labels": [],
+            "avg_temp": [],
+            "peak_temp": [],
+            "avg_hum": [],
+            "peak_hum": []
+        })
+    except Exception as e:
+        print(f"Error loading Act2 historical data: {e}")
+        return jsonify({
+            "labels": [],
+            "avg_temp": [],
+            "peak_temp": [],
+            "avg_hum": [],
+            "peak_hum": []
+        })
+
+@app.route("/save_minute_stats", methods=["POST"])
+def save_minute_stats():
+    """Save minute statistics from Act2 frontend to JSON file"""
+    try:
+        data = request.json
+        # Load existing data
+        if os.path.exists(ACT2_HISTORY_FILE) and os.path.getsize(ACT2_HISTORY_FILE) > 0:
+            with open(ACT2_HISTORY_FILE, "r") as f:
+                existing_data = json.load(f)
+        else:
+            existing_data = []
+        
+        # Add timestamp and append new data
+        data_with_timestamp = {
+            "temperature": float(data.get('avgTemp', 0)),
+            "humidity": float(data.get('avgHum', 0)),
+            "timestamp": datetime.now().isoformat()
+        }
+        existing_data.append(data_with_timestamp)
+        
+        # Keep only last 100 records to prevent file from growing too large
+        existing_data = existing_data[-100:]
+        
+        # Save back to file
+        with open(ACT2_HISTORY_FILE, "w") as f:
+            json.dump(existing_data, f, indent=2)
+        
+        print(f"Minute stats saved: {data.get('time', 'Unknown')} - Temp: {data.get('avgTemp', 0)}°C, Hum: {data.get('avgHum', 0)}%")
+        return jsonify({"status": "success"})
+    except Exception as e:
+        print(f"Error saving minute stats: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.route("/history2")
 def history2():
@@ -176,6 +415,14 @@ def send_static(path):
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGTERM, signal_handler)
+    
+    # Initialize Act2 history file
+    if not os.path.exists(ACT2_HISTORY_DIR):
+        os.makedirs(ACT2_HISTORY_DIR, exist_ok=True)
+    if not os.path.exists(ACT2_HISTORY_FILE) or os.path.getsize(ACT2_HISTORY_FILE) == 0:
+        with open(ACT2_HISTORY_FILE, "w") as f:
+            json.dump([], f)
+    
     load_act2_history()
     try:
         app.run(debug=True, host="0.0.0.0", port=5000)

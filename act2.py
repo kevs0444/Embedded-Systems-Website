@@ -1,5 +1,6 @@
 # act2.py - Activity 2: Dual Ultrasonic + DHT11 + Buzzer + OLED
 import time
+import datetime
 import threading
 import board
 import digitalio
@@ -128,8 +129,12 @@ def _monitor_sensors():
                 _last_read["distance2"] = dist2 if dist2 else 0
                 _last_read["temperature"] = temp if temp else 0
                 _last_read["humidity"] = hum if hum else 0
-                _history.append(_last_read.copy())
-                _history = _history[-20:]  # keep 20 most recent for chart
+                _last_read["timestamp"] = datetime.datetime.now().isoformat()  # Add timestamp
+                
+                # Save to history with timestamp
+                history_entry = _last_read.copy()
+                _history.append(history_entry)
+                _history = _history[-100:]  # keep 100 most recent entries
 
             # ---------------- OLED display ----------------
             try:
