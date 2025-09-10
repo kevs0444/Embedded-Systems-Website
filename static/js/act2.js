@@ -60,7 +60,15 @@ async function loadHistoricalData() {
             return;
         }
 
-        const labels = rawLabels;
+        // Convert military time to 12-hour format
+        const labels = rawLabels.map(label => {
+            const [hours, minutes] = label.split(':');
+            const hourNum = parseInt(hours);
+            const period = hourNum >= 12 ? 'PM' : 'AM';
+            const hour12 = hourNum % 12 || 12;
+            return `${hour12}:${minutes} ${period}`;
+        });
+
         const avgTemp = responseData.avgTemp || responseData.avg_temp || [];
         const peakTemp = responseData.peakTemp || responseData.peak_temp || [];
         const avgHum = responseData.avgHum || responseData.avg_hum || [];
@@ -83,7 +91,8 @@ async function loadHistoricalData() {
         histChart.data.datasets[2].data = normalizeArray(avgHum, L);
         histChart.data.datasets[3].data = normalizeArray(peakHum, L);
 
-        histChart.update();
+        // Update chart colors based on theme
+        updateChartColors();
 
         // NEW: Rebuild minStats from the chart data to keep them in sync
         minStats = [];
@@ -176,6 +185,10 @@ function initCharts() {
 
     const tempColor = '#ff5722';
     const humColor = '#2196f3';
+    
+    // Get current theme for label colors
+    const currentTheme = document.body.getAttribute('data-theme') || 'light';
+    const labelColor = currentTheme === 'dark' ? '#ffffff' : '#000000';
 
     const baseOptions = {
         responsive: true,
@@ -208,7 +221,11 @@ function initCharts() {
         },
         scales: {
             x: { 
-                title: { display: true, text: 'Time (h:m:s)' },
+                title: { 
+                    display: true, 
+                    text: 'Time (h:m:s)',
+                    color: labelColor
+                },
                 type: 'linear',
                 ticks: {
                     stepSize: 2, // 2-second intervals
@@ -217,13 +234,27 @@ function initCharts() {
                         return d.toLocaleTimeString();
                     },
                     autoSkip: true,
-                    maxTicksLimit: 12
+                    maxTicksLimit: 12,
+                    color: labelColor
+                },
+                grid: {
+                    color: currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
                 }
             },
             y: { 
                 beginAtZero: true, 
-                title: { display: true, text: 'Value' }, 
-                ticks: { maxTicksLimit: 8 } 
+                title: { 
+                    display: true, 
+                    text: 'Value',
+                    color: labelColor
+                }, 
+                ticks: { 
+                    maxTicksLimit: 8,
+                    color: labelColor
+                },
+                grid: {
+                    color: currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                }
             }
         },
         elements: { line: { tension: 0.3 } }
@@ -258,12 +289,24 @@ function initCharts() {
             ...baseOptions,
             scales: {
                 ...baseOptions.scales,
-                y: { title: { display: true, text: 'Distance (cm)' } }
+                y: { 
+                    title: { 
+                        display: true, 
+                        text: 'Distance (cm)',
+                        color: labelColor
+                    },
+                    ticks: {
+                        color: labelColor
+                    },
+                    grid: {
+                        color: currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
+                    }
+                }
             }
         }
     });
 
-    // Historical chart - match act1.js style
+    // Historical chart - tooltip fix
     histChart = new Chart(histCtx, {
         type: 'line',
         data: { 
@@ -276,7 +319,8 @@ function initCharts() {
                     backgroundColor: 'rgba(255,87,34,0.06)', 
                     borderDash: [6,4], 
                     fill: true, 
-                    pointRadius: 0 
+                    pointRadius: 0,
+                    pointHoverRadius: 0
                 },
                 { 
                     label: 'Peak Temp (°C)', 
@@ -295,7 +339,8 @@ function initCharts() {
                     backgroundColor: 'rgba(33,150,243,0.06)', 
                     borderDash: [6,4], 
                     fill: true, 
-                    pointRadius: 0 
+                    pointRadius: 0,
+                    pointHoverRadius: 0
                 },
                 { 
                     label: 'Peak Hum (%)', 
@@ -314,24 +359,73 @@ function initCharts() {
             maintainAspectRatio: false,
             animation: false,
             scales: {
-                x: { title: { display: true, text: 'Time' } },
-                y: { beginAtZero: true, title: { display: true, text: 'Values' }, max: 100 }
+                x: { 
+                    title: { display: true, text: 'Time', color: labelColor },
+                    ticks: { color: labelColor },
+                    grid: { color: currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' }
+                },
+                y: { 
+                    beginAtZero: true, 
+                    title: { display: true, text: 'Values', color: labelColor }, 
+                    max: 100,
+                    ticks: { color: labelColor },
+                    grid: { color: currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)' }
+                }
             },
             plugins: {
-                tooltip: {
+              tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    itemSort: (a, b) => a.datasetIndex - b.datasetIndex, // keep dataset order
                     callbacks: {
-                        label: ctx => ctx.parsed.y != null ? `${ctx.dataset.label}: ${ctx.parsed.y}` : null
+                        title: function(items) {
+                            return items.length ? `Time: ${items[0].label}` : '';
+                        },
+                        label: function(context) {
+                            // Return the dataset label + value for each dataset
+                            const dataset = context.dataset;
+                            const value = dataset.data[context.dataIndex];
+                            if (value == null) return null;
+                            return `${dataset.label}: ${value}${dataset.label.includes('Temp') ? '°C' : '%'}`;
+                        }
                     }
+                
+                },
+                legend: {
+                    display: true,
+                    labels: { color: labelColor }
                 }
             },
             elements: { line: { tension: 0.3 } }
         }
     });
+
 }
 
 // ----------------- Update Chart Colors -----------------
 function updateChartColors() {
     if (!distanceChart || !histChart) return;
+    
+    const currentTheme = document.body.getAttribute('data-theme') || 'light';
+    const labelColor = currentTheme === 'dark' ? '#ffffff' : '#000000';
+    const gridColor = currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+    
+    // Update distance chart colors
+    distanceChart.options.scales.x.ticks.color = labelColor;
+    distanceChart.options.scales.x.title.color = labelColor;
+    distanceChart.options.scales.x.grid.color = gridColor;
+    distanceChart.options.scales.y.ticks.color = labelColor;
+    distanceChart.options.scales.y.title.color = labelColor;
+    distanceChart.options.scales.y.grid.color = gridColor;
+    
+    // Update historical chart colors
+    histChart.options.scales.x.ticks.color = labelColor;
+    histChart.options.scales.x.title.color = labelColor;
+    histChart.options.scales.x.grid.color = gridColor;
+    histChart.options.scales.y.ticks.color = labelColor;
+    histChart.options.scales.y.title.color = labelColor;
+    histChart.options.scales.y.grid.color = gridColor;
+    
     distanceChart.update();
     histChart.update();
 }
@@ -425,7 +519,14 @@ function updateMinuteStats() {
     const peakTemp = Math.max(...tempBuffer);
     const avgHum = (humBuffer.reduce((a,b)=>a+b,0)/humBuffer.length).toFixed(1);
     const peakHum = Math.max(...humBuffer);
-    const label = new Date().toLocaleTimeString();
+    
+    // Convert to 12-hour format
+    const now = new Date();
+    const hours = now.getHours();
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const hour12 = hours % 12 || 12;
+    const label = `${hour12}:${minutes} ${period}`;
 
     // Save for stats table
     minStats.push({ time: label, avgTemp, peakTemp, avgHum, peakHum });
@@ -468,17 +569,29 @@ function renderStatsTable() {
     const statsDiv = document.getElementById('statsTableDiv');
     if (!statsDiv) return;
     if (minStats.length === 0) {
-        statsDiv.innerHTML = '<em>No 1-min stats yet.</em>';
+        statsDiv.innerHTML = '<em style="text-align:center;display:block;">No 1-min stats yet.</em>';
         return;
     }
-    let html = `<table style="width:100%;border-collapse:collapse;font-size:1rem;">
-        <thead><tr>
-            <th>Minute</th><th>Avg Temp (°C)</th><th>Avg Hum (%)</th><th>Peak Temp (°C)</th><th>Peak Hum (%)</th>
+    
+    const currentTheme = document.body.getAttribute('data-theme') || 'light';
+    const textColor = currentTheme === 'dark' ? '#ffffff' : '#000000';
+    
+    let html = `<table style="width:100%;border-collapse:collapse;font-size:1rem;color:${textColor};">
+        <thead><tr style="border-bottom:2px solid ${currentTheme === 'dark' ? '#555' : '#ccc'}">
+            <th style="text-align:center;padding:8px;">Minute</th>
+            <th style="text-align:center;padding:8px;">Avg Temp (°C)</th>
+            <th style="text-align:center;padding:8px;">Avg Hum (%)</th>
+            <th style="text-align:center;padding:8px;">Peak Temp (°C)</th>
+            <th style="text-align:center;padding:8px;">Peak Hum (%)</th>
         </tr></thead><tbody>`;
+    
     for (let stat of minStats.slice().reverse()) {
-        html += `<tr>
-            <td>${stat.time}</td><td>${stat.avgTemp}</td><td>${stat.avgHum}</td>
-            <td>${stat.peakTemp}</td><td>${stat.peakHum}</td>
+        html += `<tr style="border-bottom:1px solid ${currentTheme === 'dark' ? '#444' : '#eee'}">
+            <td style="text-align:center;padding:8px;">${stat.time}</td>
+            <td style="text-align:center;padding:8px;">${stat.avgTemp}</td>
+            <td style="text-align:center;padding:8px;">${stat.avgHum}</td>
+            <td style="text-align:center;padding:8px;">${stat.peakTemp}</td>
+            <td style="text-align:center;padding:8px;">${stat.peakHum}</td>
         </tr>`;
     }
     html += '</tbody></table>';
