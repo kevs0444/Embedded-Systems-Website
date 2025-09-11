@@ -35,6 +35,9 @@ document.addEventListener('DOMContentLoaded', () => {
     initCharts();
     initNotifications();
 
+    // ✅ add stats table placeholder below historical chart
+    addStatsTable();
+
     // Initial loads
     loadHistoricalData();
     fetchData();
@@ -64,6 +67,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (modalConfirm) modalConfirm.addEventListener('click', handleBackConfirmation);
 });
 
+function getAxisColor() {
+    const theme = document.body.getAttribute('data-theme') || 'light';
+    return theme === 'dark' ? '#ffffff' : '#000000';
+}
+
 // ==========================
 // Theme Handler
 // ==========================
@@ -78,6 +86,30 @@ function initTheme() {
         themeIcon.alt = saved === 'light' ? 'Switch to dark mode' : 'Switch to light mode';
     }
 
+    // 🔹 helper to get axis color
+    function getAxisColor() {
+        const theme = document.body.getAttribute('data-theme') || 'light';
+        return theme === 'dark' ? '#ffffff' : '#000000';
+    }
+
+    // 🔹 function to update chart colors dynamically
+    function updateChartColors() {
+        if (realChart && hist1Chart) {
+            const axisColor = getAxisColor();
+            [realChart, hist1Chart].forEach(chart => {
+                chart.options.plugins.legend.labels.color = axisColor;
+                chart.options.scales.x.title.color = axisColor;
+                chart.options.scales.x.ticks.color = axisColor;
+                chart.options.scales.y.title.color = axisColor;
+                chart.options.scales.y.ticks.color = axisColor;
+                chart.update();
+            });
+        }
+    }
+
+    // 🔹 update once on init
+    updateChartColors();
+
     if (themeBtn) {
         themeBtn.addEventListener('click', () => {
             const current = document.body.getAttribute('data-theme') || 'light';
@@ -89,6 +121,9 @@ function initTheme() {
                 themeIcon.src = next === 'light' ? '/static/icons/dark-mode.png' : '/static/icons/light-mode.png';
                 themeIcon.alt = next === 'light' ? 'Switch to dark mode' : 'Switch to light mode';
             }
+
+            // 🔹 update charts after theme switch
+            updateChartColors();
         });
     }
 }
@@ -111,14 +146,14 @@ function initCharts() {
     const tempColor = '#ff5722';
     const humColor = '#2196f3';
 
-    const baseOptions = {
+  const baseOptions = {
         responsive: true,
         maintainAspectRatio: false,
         animation: false,
         layout: { padding: { top: 6, right: 8, bottom: 6, left: 8 } },
         interaction: { mode: 'index', intersect: false },
         plugins: {
-            legend: { display: true },
+            legend: { display: true, labels: { color: getAxisColor() } },
             tooltip: {
                 enabled: true,
                 mode: 'index',
@@ -129,11 +164,19 @@ function initCharts() {
             }
         },
         scales: {
-            x: { title: { display: true, text: 'Time' }, ticks: { autoSkip: true, maxTicksLimit: 12 } },
-            y: { beginAtZero: true, title: { display: true, text: 'Value' }, ticks: { maxTicksLimit: 8 } }
+            x: { 
+                title: { display: true, text: 'Time', color: getAxisColor() }, 
+                ticks: { autoSkip: true, maxTicksLimit: 12, color: getAxisColor() } 
+            },
+            y: { 
+                beginAtZero: true, 
+                title: { display: true, text: 'Value', color: getAxisColor() }, 
+                ticks: { maxTicksLimit: 8, color: getAxisColor() } 
+            }
         },
         elements: { line: { tension: 0.3 } }
     };
+
 
     // Real-time chart
     realChart = new Chart(realCtx, {
@@ -175,42 +218,6 @@ function normalizeArray(arr, len) {
 }
 
 // ==========================
-// Data Handling (History)
-// ==========================
-function loadHistoricalData() {
-    fetch('/history')
-        .then(res => res.ok ? res.json() : Promise.reject('History fetch failed'))
-        .then(data => {
-            const responseData = data.data || data;
-            const rawLabels = responseData.labels || [];
-            if (!rawLabels.length) {
-                if (hist1Chart) {
-                    hist1Chart.data.labels = [];
-                    hist1Chart.data.datasets.forEach(ds => ds.data = []);
-                    hist1Chart.update();
-                }
-                return;
-            }
-
-            const labels = rawLabels;
-            const avgTemp = responseData.avg_temp || [];
-            const peakTemp = responseData.peak_temp || [];
-            const avgHum = responseData.avg_hum || [];
-            const peakHum = responseData.peak_hum || [];
-
-            const L = labels.length;
-            hist1Chart.data.labels = labels.slice(-L);
-            hist1Chart.data.datasets[0].data = normalizeArray(avgTemp, L);
-            hist1Chart.data.datasets[1].data = normalizeArray(peakTemp, L);
-            hist1Chart.data.datasets[2].data = normalizeArray(avgHum, L);
-            hist1Chart.data.datasets[3].data = normalizeArray(peakHum, L);
-
-            hist1Chart.update();
-        })
-        .catch(err => console.error('Error loading historical data:', err));
-}
-
-// ==========================
 // Fetch Real-time sensor
 // ==========================
 async function fetchData() {
@@ -243,6 +250,116 @@ async function fetchData() {
         updateStatus(false);
         showErrorNotification();
     }
+}
+
+// ==========================
+// Data Handling (History)
+// ==========================
+function loadHistoricalData() {
+    fetch('/history')
+        .then(res => res.ok ? res.json() : Promise.reject('History fetch failed'))
+        .then(data => {
+            const responseData = data.data || data;
+            const rawLabels = responseData.labels || [];
+            if (!rawLabels.length) {
+                if (hist1Chart) {
+                    hist1Chart.data.labels = [];
+                    hist1Chart.data.datasets.forEach(ds => ds.data = []);
+                    hist1Chart.update();
+                }
+                renderStatsTable([]); // clear table
+                return;
+            }
+
+            // Format: dd/mm/yy h:m AM/PM
+            const labels = rawLabels.map(ts => {
+                const d = new Date(ts);
+                let hours = d.getHours();
+                const minutes = d.getMinutes().toString().padStart(2, '0');
+                const ampm = hours >= 12 ? 'PM' : 'AM';
+                hours = hours % 12 || 12;
+                const day = d.getDate().toString().padStart(2, '0');
+                const month = (d.getMonth() + 1).toString().padStart(2, '0');
+                const year = d.getFullYear().toString().slice(-2);
+                return `${day}/${month}/${year} ${hours}:${minutes} ${ampm}`;
+            });
+
+            const avgTemp = responseData.avg_temp || [];
+            const peakTemp = responseData.peak_temp || [];
+            const avgHum = responseData.avg_hum || [];
+            const peakHum = responseData.peak_hum || [];
+
+            const L = labels.length;
+            hist1Chart.data.labels = labels.slice(-L);
+            hist1Chart.data.datasets[0].data = normalizeArray(avgTemp, L);
+            hist1Chart.data.datasets[1].data = normalizeArray(peakTemp, L);
+            hist1Chart.data.datasets[2].data = normalizeArray(avgHum, L);
+            hist1Chart.data.datasets[3].data = normalizeArray(peakHum, L);
+
+            hist1Chart.update();
+
+            // Build table rows from JSON data
+            const stats = [];
+            for (let i = 0; i < L; i++) {
+                stats.push({
+                    time: labels[i],
+                    avgTemp: avgTemp[i],
+                    peakTemp: peakTemp[i],
+                    avgHum: avgHum[i],
+                    peakHum: peakHum[i]
+                });
+            }
+            renderStatsTable(stats);
+        })
+        .catch(err => console.error('Error loading historical data:', err));
+}
+
+// ==========================
+// Stats Table
+// ==========================
+function addStatsTable() {
+    const histChartEl = document.getElementById('hist1Chart');
+    if (!histChartEl) return;
+    const chartCard = histChartEl.closest('.chart-card');
+    if (!chartCard) return;
+    const statsDiv = document.createElement('div');
+    statsDiv.id = 'statsTableDiv';
+    statsDiv.style.marginTop = '18px';
+    chartCard.appendChild(statsDiv);
+}
+
+function renderStatsTable(stats) {
+    const statsDiv = document.getElementById('statsTableDiv');
+    if (!statsDiv) return;
+
+    if (!stats || stats.length === 0) {
+        statsDiv.innerHTML = '<em style="text-align:center;display:block;">No historical stats available.</em>';
+        return;
+    }
+
+    const currentTheme = document.body.getAttribute('data-theme') || 'light';
+    const textColor = currentTheme === 'dark' ? '#ffffff' : '#000000';
+
+    let html = `<table style="width:100%;border-collapse:collapse;font-size:1rem;color:${textColor};">
+        <thead><tr style="border-bottom:2px solid ${currentTheme === 'dark' ? '#555' : '#ccc'}">
+            <th style="padding:8px;text-align:center;">Time</th>
+            <th style="padding:8px;text-align:center;">Avg Temp (°C)</th>
+            <th style="padding:8px;text-align:center;">Avg Hum (%)</th>
+            <th style="padding:8px;text-align:center;">Peak Temp (°C)</th>
+            <th style="padding:8px;text-align:center;">Peak Hum (%)</th>
+        </tr></thead><tbody>`;
+
+    for (let stat of stats.slice().reverse()) {
+        html += `<tr style="border-bottom:1px solid ${currentTheme === 'dark' ? '#444' : '#eee'}">
+            <td style="text-align:center;padding:8px;">${stat.time}</td>
+            <td style="text-align:center;padding:8px;">${stat.avgTemp}</td>
+            <td style="text-align:center;padding:8px;">${stat.avgHum}</td>
+            <td style="text-align:center;padding:8px;">${stat.peakTemp}</td>
+            <td style="text-align:center;padding:8px;">${stat.peakHum}</td>
+        </tr>`;
+    }
+    html += '</tbody></table>';
+    statsDiv.innerHTML = html;
 }
 
 // ==========================
@@ -301,15 +418,22 @@ function updateUI(temp, hum, buzzer) {
 }
 
 // ==========================
-// Real-time chart update (with year in x-axis)
+// Real-time chart update (with h:m:s AM/PM in x-axis)
 // ==========================
 function updateRealTimeChart(temp, hum) {
-    const time = new Date().toLocaleString('en-US', { year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', hour12:true });
+    // Format HH:MM:SS AM/PM
+    const time = new Date().toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        second: '2-digit', 
+        hour12: true 
+    });
+
     realChart.data.labels.push(time);
     realChart.data.datasets[0].data.push(Number(temp));
     realChart.data.datasets[1].data.push(Number(hum));
 
-    if(realChart.data.labels.length > 10){
+    if (realChart.data.labels.length > 10) {
         realChart.data.labels.shift();
         realChart.data.datasets.forEach(ds => ds.data.shift());
     }
