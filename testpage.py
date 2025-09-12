@@ -1,16 +1,25 @@
-from flask import Flask, render_template, jsonify
-import act2
+import smbus2
+import time
 
-app = Flask(__name__, static_folder='static', template_folder='templates')
+# PCF8591 default I2C address
+PCF8591_ADDR = 0x48
+AIN0 = 0x40  # Control byte for channel 0
 
-@app.route("/")
-def index():
-    return render_template("act2.html")
+# Initialize I2C (Bus 1 for Raspberry Pi)
+bus = smbus2.SMBus(1)
 
-@app.route("/sensor2")
-def sensor2():
-    return jsonify(act2.get_sensor_data())
+print("MQ-2 Sensor Test with PCF8591 (Raspberry Pi)")
+time.sleep(1)
 
-if __name__=="__main__":
-    act2.start_act2()
-    app.run(debug=True, host="0.0.0.0", port=5000)
+try:
+    while True:
+        # Read from AIN0 (gas sensor analog input)
+        bus.write_byte(PCF8591_ADDR, AIN0)
+        value = bus.read_byte(PCF8591_ADDR)  # Read 8-bit ADC value (0–255)
+        
+        print(f"MQ-2 Value: {value}")
+        time.sleep(1)
+
+except KeyboardInterrupt:
+    print("\nProgram stopped by user.")
+    bus.close()

@@ -403,6 +403,29 @@ def stop_act2():
         print("Act2 monitoring stopped and GPIO cleaned up")
     return redirect(url_for("index"))
 
+# -------------------- ACTIVITY 3 --------------------
+@app.route("/act3")
+def act3_page():
+    # If Act3 also has GPIO or background tasks, handle here.
+    # For now, just render the HTML page.
+    global current_activity
+    if current_activity:
+        stop_current_activity()
+        time.sleep(1)
+    current_activity = 'act3'
+    return render_template("act3.html")
+
+# -------------------- ACTIVITY 4 --------------------
+@app.route("/act4")
+def act4_page():
+    # Same logic for Act4
+    global current_activity
+    if current_activity:
+        stop_current_activity()
+        time.sleep(1)
+    current_activity = 'act4'
+    return render_template("act4.html")
+
 # -------------------- Static Files --------------------
 @app.route('/static/<path:path>')
 def send_static(path):
