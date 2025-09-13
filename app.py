@@ -461,6 +461,15 @@ def act4_hist():
     except Exception as e:
         print(f"Error loading Act4 history: {e}")
         return jsonify([])
+    
+@app.route("/act4_vib_hist")
+def act4_vib_hist():
+    try:
+        history = act4.load_vibration_history()
+        return jsonify(history[-5:])  # last 5 events
+    except Exception as e:
+        print(f"Error loading vibration history: {e}")
+        return jsonify([])
 
 @app.route("/stop_act4")
 def stop_act4_page():

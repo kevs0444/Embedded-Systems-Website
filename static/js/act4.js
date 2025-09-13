@@ -282,6 +282,62 @@ function applyVibrationChartTheme() {
 }
 
 // =========================
+// Vibration History Table
+// =========================
+function updateVibrationHistory(vibDetected) {
+    const tbody = document.getElementById("vibrationHistoryBody");
+    if (!tbody) return;
+
+    const row = document.createElement("tr");
+    const timeCell = document.createElement("td");
+    const valueCell = document.createElement("td");
+
+    timeCell.style.textAlign = "center";
+    valueCell.style.textAlign = "center";
+
+    timeCell.textContent = formatDateTime(new Date());
+    valueCell.textContent = vibDetected ? "Detected" : "None";
+
+    row.appendChild(timeCell);
+    row.appendChild(valueCell);
+    tbody.insertBefore(row, tbody.firstChild);
+
+    while (tbody.rows.length > 5) {
+        tbody.deleteRow(tbody.rows.length - 1);
+    }
+}
+
+async function loadVibrationHistory() {
+    try {
+        const resp = await fetch('/act4_vib_hist');
+        if (!resp.ok) throw new Error("Vibration history fetch failed");
+        const history = await resp.json();
+
+        const tbody = document.getElementById("vibrationHistoryBody");
+        if (!tbody) return;
+        tbody.innerHTML = "";
+
+        history.reverse().forEach(entry => {
+            const row = document.createElement("tr");
+            const timeCell = document.createElement("td");
+            const valueCell = document.createElement("td");
+
+            timeCell.style.textAlign = "center";
+            valueCell.style.textAlign = "center";
+
+            timeCell.textContent = entry.time;
+            valueCell.textContent = entry.detected ? "Detected" : "None";
+
+            row.appendChild(timeCell);
+            row.appendChild(valueCell);
+            tbody.insertBefore(row, tbody.firstChild);
+        });
+    } catch (err) {
+        console.error("Error loading vibration history:", err);
+    }
+}
+
+// =========================
 // Modal Functions
 // =========================
 function showBackModal() {
@@ -544,11 +600,7 @@ function updateTime() {
     if (t) t.textContent = new Date().toLocaleTimeString();
 }
 
-// =========================
-// DOM Ready
-// =========================
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize theme, notifications, chart, and first sensor fetch
     initTheme();
     initNotifications();
     initGasChart();
@@ -556,19 +608,16 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchData();
     setInterval(fetchData, 2000);
 
-    // Load previously saved high gas events from gas.json
     loadGasHistory();
+    loadVibrationHistory(); // NEW: Load vibration history table
 
-    // Handle back button with confirmation modal
     const backButton = document.querySelector('.back-btn');
-    if (backButton) {
-        backButton.addEventListener('click', e => {
-            e.preventDefault();
-            showBackModal();
-        });
-    }
+    if (backButton) backButton.addEventListener('click', e => {
+        e.preventDefault();
+        showBackModal();
+    });
 
-    // Modal close/cancel/confirm buttons
+    // Modal buttons
     const modalClose = document.getElementById('modalClose');
     const modalCancel = document.getElementById('modalCancel');
     const modalConfirm = document.getElementById('modalConfirm');
@@ -576,4 +625,3 @@ document.addEventListener('DOMContentLoaded', () => {
     if (modalCancel) modalCancel.addEventListener('click', hideBackModal);
     if (modalConfirm) modalConfirm.addEventListener('click', handleBackConfirmation);
 });
-

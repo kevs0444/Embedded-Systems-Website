@@ -100,14 +100,12 @@
             </div>
         </div>
 
-        <!-- Chart + Table Container -->
+        <!-- Gas Chart + Table -->
         <div class="chart-container">
-            <!-- Bubble Chart -->
+            <h3>Gas Levels</h3>
             <canvas id="gasBubbleChart"></canvas>
-
-            <!-- High Gas History Table -->
             <div class="table-container">
-                <h3>High Gas History</h3>
+                <h4>High Gas History (Latest 5)</h4>
                 <table class="data-table">
                     <thead>
                         <tr>
@@ -116,16 +114,30 @@
                         </tr>
                     </thead>
                     <tbody id="gasHistoryBody">
-                        <!-- Rows will be inserted here by JS -->
+                        <!-- Rows inserted by JS -->
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <!-- Vibration Horizontal Bar Chart -->
+        <!-- Vibration Chart + Table -->
         <div class="chart-container">
             <h3>Vibration Detection</h3>
             <canvas id="vibrationChart"></canvas>
+            <div class="table-container">
+                <h4>Vibration History (Latest 5)</h4>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="text-align:center;">Date & Time</th>
+                            <th style="text-align:center;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vibrationHistoryBody">
+                        <!-- Rows inserted by JS -->
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <!-- Footer -->

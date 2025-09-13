@@ -27,6 +27,8 @@ thread = None
 # ----------------- History Path -----------------
 ACT4_HISTORY_DIR = "/home/systemshapers/Embedded-Systems-Website/historicaldataact4"
 ACT4_HISTORY_FILE = os.path.join(ACT4_HISTORY_DIR, "gas.json")
+# ----------------- History Path for Vibration -----------------
+VIB_HISTORY_FILE = os.path.join(ACT4_HISTORY_DIR, "vibration.json")
 
 # ----------------- Email Setup -----------------
 EMAIL_FROM = "markevinalcantara40@gmail.com"
@@ -101,6 +103,43 @@ def load_high_gas_history():
     except Exception as e:
         print(f"[HISTORY ERROR] {e}")
         return []
+    
+# ----------------- Vibration History Functions -----------------
+def save_vibration_history(vib_detected: bool):
+    try:
+        os.makedirs(ACT4_HISTORY_DIR, exist_ok=True)
+        history = []
+        if os.path.exists(VIB_HISTORY_FILE):
+            try:
+                with open(VIB_HISTORY_FILE, "r") as f:
+                    history = json.load(f)
+            except json.JSONDecodeError:
+                history = []
+
+        now = datetime.now().strftime("%d/%m/%y %I:%M:%S %p")
+        entry = {"time": now, "detected": bool(vib_detected)}
+
+        # Avoid exact duplicates
+        if not history or history[-1]["detected"] != entry["detected"] or history[-1]["time"] != entry["time"]:
+            history.append(entry)
+
+        history = history[-50:]  # keep last 50
+        with open(VIB_HISTORY_FILE, "w") as f:
+            json.dump(history, f, indent=2)
+        print(f"[VIB HISTORY] Saved: {entry}")
+    except Exception as e:
+        print(f"[VIB HISTORY ERROR] {e}")
+
+def load_vibration_history():
+    try:
+        if os.path.exists(VIB_HISTORY_FILE):
+            with open(VIB_HISTORY_FILE, "r") as f:
+                history = json.load(f)
+                return history[-50:]
+        return []
+    except Exception as e:
+        print(f"[VIB HISTORY ERROR] {e}")
+        return []
 
 # ----------------- GPIO Initialization -----------------
 def init_gpio():
@@ -119,7 +158,7 @@ def init_gpio():
         print(f"GPIO initialization error: {e}")
         return False
 
-# ----------------- Main Sensor Loop -----------------
+# ----------------- Main Sensor Loop (update act4_loop) -----------------
 def act4_loop():
     global sensor_data, email_sent
     email_local = {"gas": False, "vibration": False}
@@ -146,24 +185,23 @@ def act4_loop():
             "buzzer": buz
         })
 
-        # Save high gas
+        # Save histories
         if gas_detected:
             save_high_gas_history(gas_value)
+        save_vibration_history(vib_detected)
 
         # Email alerts
         if gas_detected and not email_local["gas"]:
             email_queue.put(("🚨 Gas Alert!", f"Gas level is {gas_value} ppm."))
             email_local["gas"] = True
-            with email_sent_lock:
-                email_sent = True
+            with email_sent_lock: email_sent = True
         elif not gas_detected:
             email_local["gas"] = False
 
         if vib_detected and not email_local["vibration"]:
             email_queue.put(("⚠️ Vibration Alert!", "Vibration detected."))
             email_local["vibration"] = True
-            with email_sent_lock:
-                email_sent = True
+            with email_sent_lock: email_sent = True
         elif not vib_detected:
             email_local["vibration"] = False
 
