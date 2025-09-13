@@ -7,6 +7,7 @@ import threading
 import json
 import act1
 import act2  # Updated version with deferred GPIO setup
+import act4
 from datetime import datetime, timedelta
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
@@ -418,13 +419,47 @@ def act3_page():
 # -------------------- ACTIVITY 4 --------------------
 @app.route("/act4")
 def act4_page():
-    # Same logic for Act4
     global current_activity
     if current_activity:
         stop_current_activity()
         time.sleep(1)
-    current_activity = 'act4'
+    success = act4.start_act4()
+    current_activity = 'act4' if success else None
     return render_template("act4.html")
+
+@app.route("/act4_sensor")
+def act4_sensor():
+    """Return gas, vibration, buzzer data for frontend"""
+    return jsonify(act4.get_sensor_data())
+
+@app.route("/act4_send_email", methods=["POST"])
+def act4_send_email():
+    """Receive dynamic email from frontend form and queue it"""
+    data = request.get_json()
+    recipient = data.get("email")
+    subject = data.get("subject", "Alert from Act4")
+    body = data.get("body", "Sensor alert triggered!")
+
+    if recipient and act4.queue_email(recipient, subject, body):
+        return jsonify({"success": True, "message": f"Email queued to {recipient}"})
+    else:
+        return jsonify({"success": False, "message": "Invalid recipient or data"}), 400
+
+@app.route("/act4_email_status")
+def act4_email_status():
+    """Front-end polls to see if an email was sent (for notification)"""
+    # Note: With queue system, you could set a short-lived flag when worker sends email
+    # For simplicity, we just always return False here; front-end uses /act4_send_email response
+    return jsonify({"sent": False})
+
+@app.route("/stop_act4")
+def stop_act4_page():
+    global current_activity
+    if current_activity == 'act4':
+        act4.stop_act4()
+        current_activity = None
+        print("Act4 monitoring stopped and GPIO cleaned up")
+    return redirect(url_for("index"))
 
 # -------------------- Static Files --------------------
 @app.route('/static/<path:path>')
