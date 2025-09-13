@@ -47,7 +47,7 @@ try:
         print(f"MQ-2 Value: {gas_value}")
 
         # Detection
-        gas_detected = gas_value > 150  # Adjust threshold as needed
+        gas_detected = gas_value > 200  # Adjust threshold as needed
         vib_detected = vib_pin.value    # Active HIGH
 
         # Gas detection

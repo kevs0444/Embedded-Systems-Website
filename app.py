@@ -8,6 +8,7 @@ import json
 import act1
 import act2  # Updated version with deferred GPIO setup
 import act4
+from act4 import get_sensor_data, start_act4, stop_act4, email_sent, email_sent_lock
 from datetime import datetime, timedelta
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
@@ -18,6 +19,11 @@ current_activity = None  # 'act1', 'act2', or None
 # Path for saving historical data (Act2)
 ACT2_HISTORY_DIR = "/home/systemshapers/Embedded-Systems-Website/historicaldataact2"
 ACT2_HISTORY_FILE = os.path.join(ACT2_HISTORY_DIR, "historical_data_act2.json")
+
+
+# Path for saving historical data (Act4)
+ACT4_HISTORY_DIR = "/home/systemshapers/Embedded-Systems-Website/historicaldataact4"
+ACT4_HISTORY_FILE = os.path.join(ACT4_HISTORY_DIR, "gas.json")
 
 # Track last save time for Act2 sensor data
 last_act2_save = time.time()
@@ -427,30 +433,34 @@ def act4_page():
     current_activity = 'act4' if success else None
     return render_template("act4.html")
 
+@app.route('/act4_email_status')
+def act4_email_status():
+    with email_sent_lock:
+        sent = email_sent
+        # Determine source
+        sensor_data_snapshot = act4.get_sensor_data()
+        if sensor_data_snapshot["gas"] >= 200:
+            source = "gas"
+        elif sensor_data_snapshot["vibration"]:
+            source = "vibration"
+        else:
+            source = "unknown"
+
+        return jsonify({"sent": sent, "source": source})
+
 @app.route("/act4_sensor")
 def act4_sensor():
     """Return gas, vibration, buzzer data for frontend"""
     return jsonify(act4.get_sensor_data())
 
-@app.route("/act4_send_email", methods=["POST"])
-def act4_send_email():
-    """Receive dynamic email from frontend form and queue it"""
-    data = request.get_json()
-    recipient = data.get("email")
-    subject = data.get("subject", "Alert from Act4")
-    body = data.get("body", "Sensor alert triggered!")
-
-    if recipient and act4.queue_email(recipient, subject, body):
-        return jsonify({"success": True, "message": f"Email queued to {recipient}"})
-    else:
-        return jsonify({"success": False, "message": "Invalid recipient or data"}), 400
-
-@app.route("/act4_email_status")
-def act4_email_status():
-    """Front-end polls to see if an email was sent (for notification)"""
-    # Note: With queue system, you could set a short-lived flag when worker sends email
-    # For simplicity, we just always return False here; front-end uses /act4_send_email response
-    return jsonify({"sent": False})
+@app.route("/act4_hist")
+def act4_hist():
+    try:
+        history = act4.load_high_gas_history()
+        return jsonify(history[-5:])  # only last 5 events
+    except Exception as e:
+        print(f"Error loading Act4 history: {e}")
+        return jsonify([])
 
 @app.route("/stop_act4")
 def stop_act4_page():

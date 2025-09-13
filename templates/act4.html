@@ -14,10 +14,6 @@
     <!-- Status Indicator -->
     <div class="status" id="status">🟢</div>
 
-    <div id="emailNotif" class="notification email">
-        ✉️ Alert email sent successfully!
-    </div>
-
     <!-- Error Notification -->
     <div class="notification error" id="errorNotif">
         <div class="notif-content">
@@ -29,16 +25,6 @@
                 <div class="notif-msg">Gas or Vibration sensor is not responding</div>
             </div>
             <button class="notif-close" id="closeNotif">×</button>
-        </div>
-    </div>
-
-    <!-- Email Modal -->
-    <div class="modal" id="emailModal">
-        <div class="modal-content">
-            <h3>Send Alert Email</h3>
-            <input type="email" id="recipientEmail" placeholder="Enter recipient email" required>
-            <button id="sendEmailBtn">Send Email</button>
-            <div id="emailStatus"></div>
         </div>
     </div>
 
@@ -60,6 +46,11 @@
         </div>
     </div>
 
+    <!-- Email Sending Notification -->
+    <div class="notification email" id="emailNotif">
+        📧 Email is being sent...
+    </div>
+
     <!-- Header -->
     <header>
         <div class="header-content">
@@ -73,14 +64,9 @@
                     <small>by System Shapers</small>
                 </div>
             </div>
-            <div class="header-buttons">
-                <button class="theme-btn" id="themeBtn">
-                    <img src="/static/icons/dark-mode.png" alt="Switch Theme" class="theme-icon" id="themeIcon">
-                </button>
-                <button class="email-btn" id="emailBtn">
-                    <img src="/static/icons/email.png" alt="Send Email" class="theme-icon">
-                </button>
-            </div>
+            <button class="theme-btn" id="themeBtn">
+                <img src="/static/icons/dark-mode.png" alt="Switch Theme" class="theme-icon" id="themeIcon">
+            </button>
         </div>
     </header>
 
@@ -114,9 +100,26 @@
             </div>
         </div>
 
-        <!-- Bubble Chart for Gas Levels -->
+        <!-- Chart + Table Container -->
         <div class="chart-container">
+            <!-- Bubble Chart -->
             <canvas id="gasBubbleChart"></canvas>
+
+            <!-- High Gas History Table -->
+            <div class="table-container">
+                <h3>High Gas History</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="text-align:center;">Date & Time</th>
+                            <th style="text-align:center;">Gas Level (ppm)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="gasHistoryBody">
+                        <!-- Rows will be inserted here by JS -->
+                    </tbody>
+                </table>
+            </div>
         </div>
 
         <!-- Footer -->
@@ -124,6 +127,15 @@
             Last update: <span id="time">--</span>
         </div>
     </main>
+
+    <!-- Alert Modal -->
+    <div class="modal" id="alertModal">
+        <div class="modal-content">
+            <h3>⚠️ Alert Detected</h3>
+            <p id="alertMessage">Gas or vibration detected!</p>
+            <button onclick="closeModal()">Close</button>
+        </div>
+    </div>
 
     <!-- Scripts -->
     <script src="/static/js/act4.js"></script>

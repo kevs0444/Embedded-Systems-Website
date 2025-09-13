@@ -287,6 +287,27 @@ function initCharts() {
         },
         options: {
             ...baseOptions,
+            plugins: {
+                ...baseOptions.plugins,
+                tooltip: {
+                    ...baseOptions.plugins.tooltip,
+                    callbacks: {
+                        title: ctxs => {
+                            if (ctxs.length && ctxs[0].parsed && typeof ctxs[0].parsed.x !== 'undefined') {
+                                const d = new Date(ctxs[0].parsed.x * 1000);
+                                return `Time: ${d.toLocaleTimeString()}`;
+                            }
+                            return '';
+                        },
+                        label: (ctx) => {
+                            if (ctx && ctx.dataset && ctx.dataset.data[ctx.dataIndex] && ctx.parsed.y != null) {
+                                return `${ctx.dataset.label}: ${ctx.parsed.y} cm`;  // 👈 added "cm"
+                            }
+                            return null;
+                        }
+                    }
+                }
+            },
             scales: {
                 ...baseOptions.scales,
                 y: { 
@@ -295,9 +316,7 @@ function initCharts() {
                         text: 'Distance (cm)',
                         color: labelColor
                     },
-                    ticks: {
-                        color: labelColor
-                    },
+                    ticks: { color: labelColor },
                     grid: {
                         color: currentTheme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)'
                     }
