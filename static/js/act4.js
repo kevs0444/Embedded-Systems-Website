@@ -11,6 +11,7 @@ let gasBubbleChart = null;
 let lastEmailSent = false;
 let modalShown = false;
 
+
 // =========================
 // Chart Functions
 // =========================
@@ -186,6 +187,100 @@ async function loadGasHistory() {
     }
 }
 
+// ----------------- Vibration Chart -----------------
+let vibrationChart = null;
+
+function initVibrationChart() {
+    const ctx = document.getElementById('vibrationChart').getContext('2d');
+    const labelColor = getComputedStyle(document.body).getPropertyValue('--chart-label').trim();
+
+    vibrationChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: [], // timestamps
+            datasets: [
+                {
+                    label: 'Detected',
+                    data: [],
+                    backgroundColor: 'rgba(244, 67, 54, 0.6)', // red
+                    borderColor: 'rgba(244, 67, 54, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Not Detected',
+                    data: [],
+                    backgroundColor: 'rgba(33, 150, 243, 0.6)', // blue
+                    borderColor: 'rgba(33, 150, 243, 1)',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    stacked: true,
+                    ticks: { color: labelColor },
+                    grid: { color: 'rgba(128,128,128,0.2)' },
+                    title: { display: true, text: 'Time', color: labelColor }
+                },
+                y: {
+                    stacked: true,
+                    min: -1,
+                    max: 1,
+                    ticks: {
+                        color: labelColor,
+                        callback: function(val) {
+                            if (val === 1) return 'Detected';
+                            if (val === -1) return 'Not Detected';
+                            return '';
+                        }
+                    },
+                    grid: { color: 'rgba(128,128,128,0.2)' },
+                    title: { display: true, text: 'Vibration Status', color: labelColor }
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: { color: labelColor }
+                }
+            }
+        }
+    });
+}
+
+function updateVibrationChart(vibDetected) {
+    if (!vibrationChart) return;
+
+    const timestamp = new Date().toLocaleTimeString();
+
+    // Push timestamp
+    vibrationChart.data.labels.push(timestamp);
+
+    // Push positive value for Detected, negative for Not Detected
+    vibrationChart.data.datasets[0].data.push(vibDetected ? 1 : 0); // Detected
+    vibrationChart.data.datasets[1].data.push(vibDetected ? 0 : -1); // Not Detected
+
+    // Keep only last 10 entries
+    if (vibrationChart.data.labels.length > 10) {
+        vibrationChart.data.labels.shift();
+        vibrationChart.data.datasets.forEach(ds => ds.data.shift());
+    }
+
+    vibrationChart.update();
+}
+
+function applyVibrationChartTheme() {
+    if (!vibrationChart) return;
+    const labelColor = getComputedStyle(document.body).getPropertyValue('--chart-label').trim();
+    vibrationChart.options.scales.x.ticks.color = labelColor;
+    vibrationChart.options.scales.y.ticks.color = labelColor;
+    vibrationChart.options.scales.x.title.color = labelColor;
+    vibrationChart.options.scales.y.title.color = labelColor;
+    vibrationChart.options.plugins.legend.labels.color = labelColor;
+    vibrationChart.update();
+}
+
 // =========================
 // Modal Functions
 // =========================
@@ -227,7 +322,7 @@ function initTheme() {
                 themeIcon.src = next === 'light' ? '/static/icons/dark-mode.png' : '/static/icons/light-mode.png';
                 themeIcon.alt = next === 'light' ? 'Switch to dark mode' : 'Switch to light mode';
             }
-
+            applyVibrationChartTheme();
             applyChartTheme();
         });
     }
@@ -328,6 +423,9 @@ function closeModal() {
 // =========================
 // Data Fetching & Updates
 // =========================
+let lastGasHigh = false;
+let lastVibrationDetected = false;
+
 async function fetchData() {
     try {
         const resp = await fetch('/act4_sensor');
@@ -347,22 +445,20 @@ async function fetchData() {
         updateBadges(gasValue, vibrationDetected);
         updateBuzzerUI(buzzerActive);
         updateGasChart(gasValue);
+        updateVibrationChart(vibrationDetected);
 
         // -------------------------------
-        // Trigger alert modal if thresholds exceeded
+        // Trigger modal only on rising edge
         // -------------------------------
-        if (!modalShown && gasValue >= 200) {
+        if (gasValue >= 200 && !lastGasHigh) {
             showModal(`🚨 High Gas Detected: ${gasValue} ppm`);
-            modalShown = true;
-        } else if (!modalShown && vibrationDetected) {
-            showModal("⚠️ Vibration Detected!");
-            modalShown = true;
         }
+        lastGasHigh = gasValue >= 200;
 
-        // Reset modal flag if all normal
-        if (gasValue < 200 && !vibrationDetected) {
-            modalShown = false;
+        if (vibrationDetected && !lastVibrationDetected) {
+            showModal("⚠️ Vibration Detected!");
         }
+        lastVibrationDetected = vibrationDetected;
 
         hideErrorNotification();
         updateTime();
@@ -456,6 +552,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initTheme();
     initNotifications();
     initGasChart();
+    initVibrationChart();
     fetchData();
     setInterval(fetchData, 2000);
 
