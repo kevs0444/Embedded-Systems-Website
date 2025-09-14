@@ -11,7 +11,6 @@ let gasBubbleChart = null;
 let lastEmailSent = false;
 let modalShown = false;
 
-
 // =========================
 // Chart Functions
 // =========================
@@ -26,19 +25,19 @@ function initGasChart() {
                 {
                     label: "✅ Normal (<100 ppm)",
                     data: [],
-                    backgroundColor: "rgba(66, 165, 245, 0.6)",  
+                    backgroundColor: "rgba(66, 165, 245, 0.6)",
                     borderColor: "rgba(25, 118, 210, 1)",
                 },
                 {
                     label: "🔶 Medium (100–199 ppm)",
                     data: [],
-                    backgroundColor: "rgba(255, 193, 7, 0.6)",   
+                    backgroundColor: "rgba(255, 193, 7, 0.6)",
                     borderColor: "rgba(255, 160, 0, 1)",
                 },
                 {
                     label: "🚨 High (>=200 ppm)",
                     data: [],
-                    backgroundColor: "rgba(244, 67, 54, 0.6)",   
+                    backgroundColor: "rgba(244, 67, 54, 0.6)",
                     borderColor: "rgba(211, 47, 47, 1)",
                 }
             ]
@@ -47,11 +46,7 @@ function initGasChart() {
             responsive: true,
             plugins: {
                 legend: { labels: { color: labelColor } },
-                tooltip: {
-                    callbacks: {
-                        label: (ctx) => `${ctx.raw.y} ppm`
-                    }
-                }
+                tooltip: { callbacks: { label: (ctx) => `${ctx.raw.y} ppm` } }
             },
             scales: {
                 x: {
@@ -74,31 +69,32 @@ function initGasChart() {
 function updateGasChart(newGasValue) {
     if (!gasBubbleChart) return;
 
-    // Ensure visible radius even if gas = 0
-    const radius = Math.max(10, Math.min(newGasValue / 8 + 5, 25)); // min radius 10
+    const now = new Date();
+    const radius = Math.max(10, Math.min(newGasValue / 8 + 5, 25));
 
-    // Use exact current timestamp for bubble x
-    const timestamp = new Date();
-    const bubble = { x: timestamp, y: newGasValue, r: radius };
+    // Determine dataset index based on value
+    let datasetIndex = 0; // Normal (Blue)
+    if (newGasValue >= 200) datasetIndex = 2; // High (Red)
+    else if (newGasValue >= 100) datasetIndex = 1; // Medium (Yellow)
 
-    let datasetIndex;
-    if (newGasValue >= 200) datasetIndex = 2;
-    else if (newGasValue >= 100) datasetIndex = 1;
-    else datasetIndex = 0;
+    // Update all datasets
+    gasBubbleChart.data.datasets.forEach((ds, index) => {
+        if (index === datasetIndex) {
+            // Active dataset gets actual bubble
+            ds.data.push({ x: now, y: newGasValue, r: radius });
+        } else {
+            // Inactive datasets get null so bubble disappears
+            ds.data.push({ x: now, y: null, r: 0 });
+        }
 
-    gasBubbleChart.data.datasets[datasetIndex].data.push(bubble);
-
-    // Keep only last 10 points in each dataset
-    gasBubbleChart.data.datasets.forEach(ds => {
+        // Keep only last 10 points
         while (ds.data.length > 10) ds.data.shift();
     });
 
-    // Update chart dynamically
     gasBubbleChart.update();
-
-    // Update high gas history if needed
-    if (newGasValue >= 200) updateGasHistory(newGasValue);
 }
+
+
 
 function applyChartTheme() {
     if (!gasBubbleChart) return;
@@ -284,10 +280,23 @@ function applyVibrationChartTheme() {
 // =========================
 // Vibration History Table
 // =========================
+// ============================
+// Vibration History Functions
+// ============================
+
+// ============================
+// Vibration History Functions
+// ============================
+
+let lastFetchedTime = null; // Track last vibration timestamp
+
 function updateVibrationHistory(vibDetected) {
+    if (!vibDetected) return; // Only log detected events
+
     const tbody = document.getElementById("vibrationHistoryBody");
     if (!tbody) return;
 
+    const now = new Date();
     const row = document.createElement("tr");
     const timeCell = document.createElement("td");
     const valueCell = document.createElement("td");
@@ -295,19 +304,27 @@ function updateVibrationHistory(vibDetected) {
     timeCell.style.textAlign = "center";
     valueCell.style.textAlign = "center";
 
-    timeCell.textContent = formatDateTime(new Date());
-    valueCell.textContent = vibDetected ? "Detected" : "None";
+    timeCell.textContent = formatDateTime(now);
+    valueCell.textContent = "Detected";
 
     row.appendChild(timeCell);
     row.appendChild(valueCell);
     tbody.insertBefore(row, tbody.firstChild);
 
+    // Keep only the latest 5 rows
     while (tbody.rows.length > 5) {
         tbody.deleteRow(tbody.rows.length - 1);
     }
+
+    // Optional: send detected event to backend
+    fetch('/add_vibration', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ detected: true, time: timeCell.textContent })
+    }).catch(err => console.error("Error sending vibration data:", err));
 }
 
-async function loadVibrationHistory() {
+async function fetchNewVibrationHistory() {
     try {
         const resp = await fetch('/act4_vib_hist');
         if (!resp.ok) throw new Error("Vibration history fetch failed");
@@ -315,9 +332,14 @@ async function loadVibrationHistory() {
 
         const tbody = document.getElementById("vibrationHistoryBody");
         if (!tbody) return;
-        tbody.innerHTML = "";
 
-        history.reverse().forEach(entry => {
+        // Filter detected events
+        const detectedEvents = history.filter(entry => entry.detected);
+
+        detectedEvents.forEach(entry => {
+            // Skip if already displayed
+            if (lastFetchedTime && entry.time <= lastFetchedTime) return;
+
             const row = document.createElement("tr");
             const timeCell = document.createElement("td");
             const valueCell = document.createElement("td");
@@ -326,16 +348,43 @@ async function loadVibrationHistory() {
             valueCell.style.textAlign = "center";
 
             timeCell.textContent = entry.time;
-            valueCell.textContent = entry.detected ? "Detected" : "None";
+            valueCell.textContent = "Detected";
 
             row.appendChild(timeCell);
             row.appendChild(valueCell);
             tbody.insertBefore(row, tbody.firstChild);
         });
+
+        // Update lastFetchedTime
+        if (detectedEvents.length > 0) {
+            lastFetchedTime = detectedEvents[detectedEvents.length - 1].time;
+        }
+
+        // Keep only latest 5 rows
+        while (tbody.rows.length > 5) {
+            tbody.deleteRow(tbody.rows.length - 1);
+        }
+
     } catch (err) {
-        console.error("Error loading vibration history:", err);
+        console.error("Error fetching vibration history:", err);
     }
 }
+
+// ============================
+// Helper: format datetime
+// ============================
+function formatDateTime(date) {
+    const options = { year: '2-digit', month: '2-digit', day: '2-digit',
+                      hour: '2-digit', minute: '2-digit', second: '2-digit',
+                      hour12: true };
+    return new Intl.DateTimeFormat('en-US', options).format(date);
+}
+
+// ============================
+// Auto-fetch new vibrations every 2 seconds
+// ============================
+fetchNewVibrationHistory(); // Initial fetch
+setInterval(fetchNewVibrationHistory, 2000);
 
 // =========================
 // Modal Functions
