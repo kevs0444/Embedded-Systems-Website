@@ -9,6 +9,8 @@ import act1
 import act2  # Updated version with deferred GPIO setup
 import act4
 from act4 import get_sensor_data, start_act4, stop_act4, email_sent, email_sent_lock
+import act6
+from act6 import start_act6, stop_act6, get_location
 from datetime import datetime, timedelta
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
@@ -479,6 +481,31 @@ def stop_act4_page():
         current_activity = None
         print("Act4 monitoring stopped and GPIO cleaned up")
     return redirect(url_for("index"))
+
+# -------------------- ACTIVITY 5 --------------------
+@app.route("/act5")
+def act5_page():
+    global current_activity
+    if current_activity:
+        stop_current_activity()
+        time.sleep(1)
+    current_activity = 'act5'
+    return render_template("act5.html")
+
+# -------------------- ACTIVITY 6 --------------------
+@app.route("/act6")
+def act6_page():
+    global current_activity
+    if current_activity:
+        stop_current_activity()
+        time.sleep(1)
+    current_activity = 'act6'
+    return render_template("act6.html")
+
+@app.route("/act6_location")
+def act6_location():
+    location = act6.get_location()
+    return jsonify(location)
 
 # -------------------- Static Files --------------------
 @app.route('/static/<path:path>')

@@ -1,0 +1,33 @@
+body {
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
+  text-align: center;
+}
+
+#map {
+  height: 500px;
+  width: 100%;
+  margin-top: 10px;
+  border: 2px solid #444;
+  border-radius: 8px;
+}
+
+.status-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 5px;
+}
+
+.status-item .label {
+  font-weight: bold;
+  margin-right: 10px;
+}
+
+.status-item .value.good {
+  color: green;
+}
+
+.status-item .value.bad {
+  color: red;
+}
