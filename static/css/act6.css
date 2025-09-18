@@ -1,33 +1,235 @@
-body {
-  font-family: Arial, sans-serif;
-  margin: 0;
-  padding: 0;
-  text-align: center;
+/* ================================
+   Activity 6 specific styles
+   Matching Activity 4 design
+   ================================ */
+
+/* --------------------------
+   Map Container
+   -------------------------- */
+.chart-container {
+    border-radius: 20px;
+    padding: 25px;
+    margin: 30px auto;
+    width: 95%;
+    max-width: 900px;
+    background: var(--card-bg, transparent);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    min-height: 420px;
+    backdrop-filter: blur(10px);
+    border: 2px solid var(--accent);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+}
+
+.chart-container:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.15);
 }
 
 #map {
-  height: 500px;
-  width: 100%;
-  margin-top: 10px;
-  border: 2px solid #444;
-  border-radius: 8px;
+    width: 100%;
+    height: 350px;
+    border-radius: 12px;
+    overflow: hidden;
+    position: relative;
+    z-index: 1;
 }
 
-.status-item {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 5px;
+/* Ensure map tiles load properly */
+.gm-style {
+    font: inherit;
 }
 
-.status-item .label {
-  font-weight: bold;
-  margin-right: 10px;
+/* Fix for Google Maps controls */
+.gmnoprint {
+    margin: 10px;
 }
 
-.status-item .value.good {
-  color: green;
+.gm-style-cc {
+    display: none;
 }
 
-.status-item .value.bad {
-  color: red;
+/* --------------------------
+   Cards Layout
+   -------------------------- */
+.cards-container.single-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 1rem;
+    width: 95%;
+    max-width: 1100px;
+    margin: 20px auto;
+}
+
+.card.accent-border {
+    padding: 1.2rem;
+    border-radius: 16px;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    border: 2px solid var(--accent);
+    backdrop-filter: blur(10px);
+    min-width: 180px;
+}
+
+[data-theme="light"] .card.accent-border {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+}
+
+[data-theme="dark"] .card.accent-border {
+    background: linear-gradient(135deg, rgba(40, 40, 55, 0.9) 0%, rgba(30, 30, 40, 0.9) 100%);
+}
+
+.card.accent-border:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 28px rgba(0,0,0,0.15);
+}
+
+.card h3 {
+    margin-bottom: 0.4rem;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-2);
+}
+
+.card .value {
+    font-size: 1.4rem;
+    font-weight: bold;
+    margin-bottom: 0.4rem;
+    color: var(--accent);
+}
+
+/* --------------------------
+   GPS Data Table
+   -------------------------- */
+.table-container {
+    margin-top: 20px;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table tr {
+    border-bottom: 1px solid rgba(128, 128, 128, 0.2);
+}
+
+.data-table tr:last-child {
+    border-bottom: none;
+}
+
+.data-table td {
+    padding: 12px 15px;
+}
+
+.data-table .label {
+    font-weight: bold;
+    color: var(--text-2);
+    width: 40%;
+}
+
+.data-table .value {
+    color: var(--accent);
+}
+
+.data-table .value.good {
+    color: #4caf50;
+}
+
+.data-table .value.bad {
+    color: #f44336;
+}
+
+/* --------------------------
+   GPS Icon
+   -------------------------- */
+.gps-icon {
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.gps-icon img {
+    width: 40px;
+    height: 40px;
+}
+
+/* --------------------------
+   Badges
+   -------------------------- */
+.badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.badge.ok {
+    background-color: rgba(76, 175, 80, 0.2);
+    color: #4caf50;
+}
+
+.badge.warn {
+    background-color: rgba(255, 193, 7, 0.2);
+    color: #ffc107;
+}
+
+.badge.danger {
+    background-color: rgba(244, 67, 54, 0.2);
+    color: #f44336;
+}
+
+/* Theme variables */
+[data-theme="light"] {
+    --chart-label: #333;
+    --text-2: #333;
+    --text: #333;
+    --accent: #2196f3;
+    --card-bg: rgba(255,255,255,0.9);
+}
+
+[data-theme="dark"] {
+    --chart-label: #f0f0f0;
+    --text-2: #ddd;
+    --text: #ddd;
+    --accent: #90caf9;
+    --card-bg: rgba(30,30,40,0.85);
+}
+
+[data-theme="light"] .chart-container {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+}
+
+[data-theme="dark"] .chart-container {
+    background: linear-gradient(135deg, rgba(40, 40, 55, 0.9) 0%, rgba(30, 30, 40, 0.9) 100%);
+}
+
+/* --------------------------
+   Responsive adjustments
+   -------------------------- */
+@media (max-width: 900px) {
+    .cards-container.single-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .chart-container {
+        min-height: 350px;
+        padding: 20px;
+    }
+}
+
+@media (max-width: 600px) {
+    .cards-container.single-row {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-container {
+        min-height: 300px;
+        padding: 15px;
+    }
+    
+    #map {
+        height: 250px;
+    }
 }

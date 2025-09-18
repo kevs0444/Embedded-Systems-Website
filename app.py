@@ -36,7 +36,6 @@ def signal_handler(signum, frame):
     stop_current_activity()
     exit(0)
 
-# -------------------- Helper Functions --------------------
 def stop_current_activity():
     global current_activity
     if current_activity == 'act1':
@@ -47,6 +46,9 @@ def stop_current_activity():
         act2.cleanup()
         save_act2_history()
         print("Act2 monitoring stopped and GPIO cleaned up")
+    elif current_activity == 'act6':
+        stop_act6()
+        print("Act6 (GPS) monitoring stopped")
     current_activity = None
 
 def save_act2_history():
@@ -492,20 +494,32 @@ def act5_page():
     current_activity = 'act5'
     return render_template("act5.html")
 
-# -------------------- ACTIVITY 6 --------------------
+# -------------------- ACTIVITY 6 (GPS) --------------------
 @app.route("/act6")
 def act6_page():
     global current_activity
     if current_activity:
         stop_current_activity()
         time.sleep(1)
-    current_activity = 'act6'
+    success = start_act6()
+    current_activity = 'act6' if success else None
     return render_template("act6.html")
 
-@app.route("/act6_location")
-def act6_location():
-    location = act6.get_location()
-    return jsonify(location)
+@app.route("/act6_data")
+def act6_data():
+    """Return the latest GPS location & satellite info as JSON"""
+    data = get_location()
+    return jsonify(data)
+
+@app.route("/stop_act6")
+def stop_act6_route():
+    global current_activity
+    if current_activity == 'act6':
+        stop_act6()
+        current_activity = None
+        print("Act6 (GPS) monitoring stopped")
+    return redirect(url_for("index"))
+
 
 # -------------------- Static Files --------------------
 @app.route('/static/<path:path>')
