@@ -7,6 +7,22 @@ let lastLat = null;
 let lastLon = null;
 
 // =========================
+// Map Styles
+// =========================
+const lightMapStyle = []; // default Google style
+
+const darkMapStyle = [
+    { elementType: "geometry", stylers: [{ color: "#212121" }] },
+    { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
+    { elementType: "labels.text.fill", stylers: [{ color: "#757575" }] },
+    { elementType: "labels.text.stroke", stylers: [{ color: "#212121" }] },
+    { featureType: "administrative", elementType: "geometry", stylers: [{ color: "#757575" }] },
+    { featureType: "poi", elementType: "geometry", stylers: [{ color: "#282828" }] },
+    { featureType: "road", elementType: "geometry", stylers: [{ color: "#383838" }] },
+    { featureType: "water", elementType: "geometry", stylers: [{ color: "#000000" }] }
+];
+
+// =========================
 // Accelerometer Chart Setup
 // =========================
 let accelChart;
@@ -19,7 +35,7 @@ let accelData = {
             backgroundColor: "rgba(255, 99, 132, 0.2)",
             data: [],
             fill: false,
-            tension: 0.3
+            tension: 0.4
         },
         {
             label: "Accel Y",
@@ -27,7 +43,7 @@ let accelData = {
             backgroundColor: "rgba(54, 162, 235, 0.2)",
             data: [],
             fill: false,
-            tension: 0.3
+            tension: 0.4
         },
         {
             label: "Accel Z",
@@ -35,7 +51,7 @@ let accelData = {
             backgroundColor: "rgba(75, 192, 192, 0.2)",
             data: [],
             fill: false,
-            tension: 0.3
+            tension: 0.4
         }
     ]
 };
@@ -53,7 +69,7 @@ let gyroData = {
             backgroundColor: "rgba(255, 206, 86, 0.2)",
             data: [],
             fill: false,
-            tension: 0.3
+            tension: 0.4
         },
         {
             label: "Gyro Y",
@@ -61,7 +77,7 @@ let gyroData = {
             backgroundColor: "rgba(153, 102, 255, 0.2)",
             data: [],
             fill: false,
-            tension: 0.3
+            tension: 0.4
         },
         {
             label: "Gyro Z",
@@ -69,7 +85,7 @@ let gyroData = {
             backgroundColor: "rgba(255, 159, 64, 0.2)",
             data: [],
             fill: false,
-            tension: 0.3
+            tension: 0.4
         }
     ]
 };
@@ -80,11 +96,15 @@ let gyroData = {
 function initMap() {
     try {
         const loadingLocation = { lat: 0, lng: 0 };
+        const savedTheme = localStorage.getItem('theme') || 'light';
 
         map = new google.maps.Map(document.getElementById("map"), {
             center: loadingLocation,
             zoom: 2,
-            styles: []
+            styles: savedTheme === 'dark' ? darkMapStyle : lightMapStyle,
+            mapTypeControl: false,
+            streetViewControl: false,
+            fullscreenControl: false
         });
 
         marker = new google.maps.Marker({
@@ -268,6 +288,13 @@ function initTheme() {
 
             themeIcon.src = next === 'light' ? '/static/icons/dark-mode.png' : '/static/icons/light-mode.png';
             themeIcon.alt = next === 'light' ? 'Switch to dark mode' : 'Switch to light mode';
+
+            // Update Google Map style on theme switch
+            if (map) {
+                map.setOptions({
+                    styles: next === 'dark' ? darkMapStyle : lightMapStyle
+                });
+            }
         });
     }
 }
@@ -323,10 +350,21 @@ document.addEventListener('DOMContentLoaded', () => {
         data: accelData,
         options: {
             responsive: true,
+            animation: {
+                duration: 800,
+                easing: "easeInOutCubic"
+            },
             plugins: { legend: { position: "top" } },
             scales: {
                 x: { title: { display: true, text: "Time" } },
                 y: { title: { display: true, text: "Acceleration (g)" } }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            elements: {
+                line: { tension: 0.4 }
             }
         }
     });
@@ -338,10 +376,21 @@ document.addEventListener('DOMContentLoaded', () => {
         data: gyroData,
         options: {
             responsive: true,
+            animation: {
+                duration: 800,
+                easing: "easeInOutCubic"
+            },
             plugins: { legend: { position: "top" } },
             scales: {
                 x: { title: { display: true, text: "Time" } },
                 y: { title: { display: true, text: "Angular Velocity (°/s)" } }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            elements: {
+                line: { tension: 0.4 }
             }
         }
     });

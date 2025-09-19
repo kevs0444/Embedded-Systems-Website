@@ -90,6 +90,28 @@
     min-width: 180px;
 }
 
+.alert-display {
+    display: flex;
+    align-items: center;     /* vertical centering */
+    justify-content: center; /* horizontal centering */
+    gap: 10px;               /* spacing between icon and text */
+    text-align: center;
+}
+
+.gps-icon img {
+    width: 28px;
+    height: 28px;
+    vertical-align: middle;
+}
+
+#gpsStatusBadge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px 10px;
+    border-radius: 12px;
+}
+
 [data-theme="light"] .card.accent-border {
     background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
 }
