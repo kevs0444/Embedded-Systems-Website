@@ -11,7 +11,8 @@ location_data = {
     "fix": False,
     "satellites": 0,
     "altitude": None,
-    "speed": None
+    "speed": None,
+    "timestamp": None
 }
 lock = threading.Lock()
 thread = None
@@ -29,9 +30,10 @@ def parse_gps_data(data):
                 location_data["lat"] = msg.latitude
                 location_data["lon"] = msg.longitude
                 location_data["altitude"] = msg.altitude
-                location_data["fix"] = (msg.gps_qual > 0)
                 location_data["satellites"] = msg.num_sats
+                location_data["fix"] = (msg.gps_qual > 0)
 
+            # Debug logs
             if location_data["fix"] != last_fix_status:
                 if location_data["fix"]:
                     print(f"[GPS] ✅ Fix acquired! Lat={msg.latitude}, Lon={msg.longitude}, Sats={msg.num_sats}")
@@ -46,7 +48,13 @@ def parse_gps_data(data):
         elif data.startswith('$GPRMC'):
             msg = pynmea2.parse(data)
             with lock:
+                # RMC status 'A' = active fix, 'V' = void
+                if getattr(msg, "status", "V") == "A":
+                    location_data["fix"] = True
+                location_data["lat"] = msg.latitude or location_data["lat"]
+                location_data["lon"] = msg.longitude or location_data["lon"]
                 location_data["speed"] = getattr(msg, 'spd_over_grnd', None)
+                location_data["timestamp"] = f"{msg.datestamp} {msg.timestamp}"
 
     except (pynmea2.ParseError, serial.SerialException, UnicodeDecodeError) as e:
         print(f"[GPS parsing error] {e}")
@@ -54,12 +62,12 @@ def parse_gps_data(data):
 def gps_loop():
     global running, gps_serial
     try:
-        gps_serial = serial.Serial('/dev/ttyS0', 9600, timeout=1)
-        print("[GPS] Serial connection established on /dev/ttyS0")
+        gps_serial = serial.Serial('/dev/serial0', 9600, timeout=1)
+        print("[GPS] Serial connection established on /dev/serial0")
         while running:
             line = gps_serial.readline()
             if line:
-                parse_gps_data(line.decode('ascii', errors='replace').strip())
+                parse_gps_data(line.decode('ascii', errors='ignore').strip())
             time.sleep(0.1)
     except serial.SerialException as e:
         print(f"[GPS ERROR] {e}")
