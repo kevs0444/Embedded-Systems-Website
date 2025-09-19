@@ -6,19 +6,87 @@ let mapInitialized = false;
 let lastLat = null;
 let lastLon = null;
 
-// Initialize Google Map with loading state
+// =========================
+// Accelerometer Chart Setup
+// =========================
+let accelChart;
+let accelData = {
+    labels: [],
+    datasets: [
+        {
+            label: "Accel X",
+            borderColor: "rgba(255, 99, 132, 1)",
+            backgroundColor: "rgba(255, 99, 132, 0.2)",
+            data: [],
+            fill: false,
+            tension: 0.3
+        },
+        {
+            label: "Accel Y",
+            borderColor: "rgba(54, 162, 235, 1)",
+            backgroundColor: "rgba(54, 162, 235, 0.2)",
+            data: [],
+            fill: false,
+            tension: 0.3
+        },
+        {
+            label: "Accel Z",
+            borderColor: "rgba(75, 192, 192, 1)",
+            backgroundColor: "rgba(75, 192, 192, 0.2)",
+            data: [],
+            fill: false,
+            tension: 0.3
+        }
+    ]
+};
+
+// =========================
+// Gyroscope Chart Setup
+// =========================
+let gyroChart;
+let gyroData = {
+    labels: [],
+    datasets: [
+        {
+            label: "Gyro X",
+            borderColor: "rgba(255, 206, 86, 1)",
+            backgroundColor: "rgba(255, 206, 86, 0.2)",
+            data: [],
+            fill: false,
+            tension: 0.3
+        },
+        {
+            label: "Gyro Y",
+            borderColor: "rgba(153, 102, 255, 1)",
+            backgroundColor: "rgba(153, 102, 255, 0.2)",
+            data: [],
+            fill: false,
+            tension: 0.3
+        },
+        {
+            label: "Gyro Z",
+            borderColor: "rgba(255, 159, 64, 1)",
+            backgroundColor: "rgba(255, 159, 64, 0.2)",
+            data: [],
+            fill: false,
+            tension: 0.3
+        }
+    ]
+};
+
+// =========================
+// Initialize Google Map
+// =========================
 function initMap() {
     try {
-        // Neutral start position (world view)
         const loadingLocation = { lat: 0, lng: 0 };
 
         map = new google.maps.Map(document.getElementById("map"), {
             center: loadingLocation,
             zoom: 2,
-            styles: [ /* your dark theme styles unchanged */ ]
+            styles: []
         });
 
-        // Hidden marker until we have data
         marker = new google.maps.Marker({
             position: loadingLocation,
             map: map,
@@ -35,8 +103,11 @@ function initMap() {
 
         showGPSLoadingNotification();
 
-        // Update GPS data every 2 seconds
+        // Update GPS every 2s
         setInterval(updateGPSLocation, 2000);
+
+        // Update charts every 1s
+        setInterval(updateSensorCharts, 1000);
 
         initTheme();
         initNotifications();
@@ -44,38 +115,21 @@ function initMap() {
     } catch (error) {
         console.error("Error initializing Google Maps:", error);
         showErrorNotification();
-
-        setTimeout(() => {
-            if (typeof google !== 'undefined' && typeof google.maps !== 'undefined') {
-                initMap();
-            }
-        }, 3000);
     }
 }
 
-// Handle Google Maps API loading errors
-window.gm_authFailure = function() {
-    console.error("Google Maps authentication failed");
-    showErrorNotification();
-};
-
 // =========================
-// Update map with GPS data
+// Update GPS
 // =========================
 function updateGPSLocation() {
     fetch('/act6_data')
-        .then(response => {
-            if (!response.ok) throw new Error('Network response was not ok');
-            return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
-            // Update last known coordinates if valid
             if (data.lat && data.lon) {
                 lastLat = data.lat;
                 lastLon = data.lon;
             }
 
-            // Use last known location if available
             if (lastLat !== null && lastLon !== null) {
                 const newPos = { lat: lastLat, lng: lastLon };
 
@@ -89,14 +143,12 @@ function updateGPSLocation() {
                     }
                 }
             } else {
-                console.log("Waiting for GPS fix...");
                 updateGPSDisplayLoading();
             }
 
             updateGPSDisplay(data);
             updateStatus(true);
             hideErrorNotification();
-            updateTime();
         })
         .catch(error => {
             console.error('Error fetching GPS data:', error);
@@ -105,15 +157,52 @@ function updateGPSLocation() {
         });
 }
 
-// GPS loading display
+// =========================
+// Update Sensor Charts
+// =========================
+function updateSensorCharts() {
+    fetch('/act6_data')
+        .then(response => response.json())
+        .then(data => {
+            const now = new Date().toLocaleTimeString();
+
+            // Accelerometer
+            if (data.accel) {
+                accelData.labels.push(now);
+                accelData.datasets[0].data.push(data.accel.x);
+                accelData.datasets[1].data.push(data.accel.y);
+                accelData.datasets[2].data.push(data.accel.z);
+
+                if (accelData.labels.length > 10) {
+                    accelData.labels.shift();
+                    accelData.datasets.forEach(ds => ds.data.shift());
+                }
+                accelChart.update();
+            }
+
+            // Gyroscope
+            if (data.gyro) {
+                gyroData.labels.push(now);
+                gyroData.datasets[0].data.push(data.gyro.x);
+                gyroData.datasets[1].data.push(data.gyro.y);
+                gyroData.datasets[2].data.push(data.gyro.z);
+
+                if (gyroData.labels.length > 10) {
+                    gyroData.labels.shift();
+                    gyroData.datasets.forEach(ds => ds.data.shift());
+                }
+                gyroChart.update();
+            }
+        })
+        .catch(error => console.error("Error fetching sensor data:", error));
+}
+
+// =========================
+// GPS Display Functions
+// =========================
 function updateGPSDisplayLoading() {
     document.getElementById('latitude').textContent = "--";
     document.getElementById('longitude').textContent = "--";
-    document.getElementById('gpsFix').textContent = "Loading...";
-    document.getElementById('gpsFix').className = 'value bad';
-    document.getElementById('satellites').textContent = "--";
-    document.getElementById('altitude').textContent = "--";
-    document.getElementById('speed').textContent = "--";
 
     const gpsStatusBadge = document.getElementById('gpsStatusBadge');
     const gpsStatusText = document.getElementById('gpsStatusText');
@@ -123,25 +212,11 @@ function updateGPSDisplayLoading() {
     if (gpsIcon) gpsIcon.innerHTML = '<img src="/static/icons/finding.png" alt="GPS Loading Icon">';
 }
 
-// Update GPS display with real data
 function updateGPSDisplay(data) {
     if (!data.lat || !data.lon) return;
 
     document.getElementById('latitude').textContent = data.lat.toFixed(6);
     document.getElementById('longitude').textContent = data.lon.toFixed(6);
-
-    const gpsFixElement = document.getElementById('gpsFix');
-    gpsFixElement.textContent = data.fix ? 'Acquired' : 'Searching';
-    gpsFixElement.className = data.fix ? 'value good' : 'value bad';
-
-    document.getElementById('satellites').textContent = data.satellites;
-    document.getElementById('latitudeValue').textContent = data.lat.toFixed(6);
-    document.getElementById('longitudeValue').textContent = data.lon.toFixed(6);
-
-    document.getElementById('altitude').textContent =
-        data.altitude !== null ? data.altitude + ' m' : "--";
-    document.getElementById('speed').textContent =
-        data.speed !== null ? data.speed + ' km/h' : "--";
 
     const gpsStatusBadge = document.getElementById('gpsStatusBadge');
     const gpsStatusText = document.getElementById('gpsStatusText');
@@ -150,18 +225,21 @@ function updateGPSDisplay(data) {
     if (data.fix) {
         gpsStatusBadge.className = 'badge ok';
         gpsStatusText.textContent = 'Acquired';
-        if (gpsIcon) gpsIcon.innerHTML = '<img src="/static/icons/gps-on.png" alt="GPS On Icon">';
+        gpsIcon.innerHTML = '<img src="/static/icons/gps-on.png" alt="GPS On Icon">';
     } else {
         gpsStatusBadge.className = 'badge danger';
         gpsStatusText.textContent = 'Searching';
-        if (gpsIcon) gpsIcon.innerHTML = '<img src="/static/icons/gps-off.png" alt="GPS Off Icon">';
+        gpsIcon.innerHTML = '<img src="/static/icons/gps-off.png" alt="GPS Off Icon">';
     }
 
     document.getElementById('latitudeBadge').textContent = data.lat >= 0 ? 'N' : 'S';
     document.getElementById('longitudeBadge').textContent = data.lon >= 0 ? 'E' : 'W';
+    document.getElementById('satelliteCard').textContent = data.satellites;
 }
 
-// Show temporary GPS loading notification
+// =========================
+// Notifications & Theme
+// =========================
 function showGPSLoadingNotification() {
     const n = document.createElement("div");
     n.className = "notification gps-loading";
@@ -170,9 +248,6 @@ function showGPSLoadingNotification() {
     setTimeout(() => n.remove(), 5000);
 }
 
-// =========================
-// Theme Functions
-// =========================
 function initTheme() {
     const themeBtn = document.getElementById('themeBtn');
     const themeIcon = document.getElementById('themeIcon');
@@ -191,17 +266,12 @@ function initTheme() {
             document.body.setAttribute('data-theme', next);
             localStorage.setItem('theme', next);
 
-            if (themeIcon) {
-                themeIcon.src = next === 'light' ? '/static/icons/dark-mode.png' : '/static/icons/light-mode.png';
-                themeIcon.alt = next === 'light' ? 'Switch to dark mode' : 'Switch to light mode';
-            }
+            themeIcon.src = next === 'light' ? '/static/icons/dark-mode.png' : '/static/icons/light-mode.png';
+            themeIcon.alt = next === 'light' ? 'Switch to dark mode' : 'Switch to light mode';
         });
     }
 }
 
-// =========================
-// Notifications
-// =========================
 function initNotifications() {
     const closeNotif = document.getElementById('closeNotif');
     if (closeNotif) closeNotif.addEventListener('click', hideErrorNotification);
@@ -232,42 +302,51 @@ function updateStatus(connected) {
 }
 
 function updateTime() {
-    const t = document.getElementById('time');
-    if (t) t.textContent = new Date().toLocaleTimeString();
+    const now = new Date().toLocaleTimeString();
+    const footerTime = document.getElementById('time');
+    const cardTime = document.getElementById('timeCard');
+    if (footerTime) footerTime.textContent = now;
+    if (cardTime) cardTime.textContent = now;
 }
 
 // =========================
-// Modal Functions
+// DOM Ready
 // =========================
-function showBackModal() {
-    const m = document.getElementById('backModal');
-    if (m) m.classList.add('show');
-}
-
-function hideBackModal() {
-    const m = document.getElementById('backModal');
-    if (m) m.classList.remove('show');
-}
-
-function handleBackConfirmation() {
-    hideBackModal();
-    window.location.href = '/';
-}
-
 document.addEventListener('DOMContentLoaded', () => {
-    const backButton = document.querySelector('.back-btn');
-    if (backButton) backButton.addEventListener('click', e => {
-        e.preventDefault();
-        showBackModal();
+    // 🕒 refresh time every second
+    setInterval(updateTime, 1000);
+
+    // 📈 Init accelerometer chart
+    const accelCtx = document.getElementById("accelChart").getContext("2d");
+    accelChart = new Chart(accelCtx, {
+        type: "line",
+        data: accelData,
+        options: {
+            responsive: true,
+            plugins: { legend: { position: "top" } },
+            scales: {
+                x: { title: { display: true, text: "Time" } },
+                y: { title: { display: true, text: "Acceleration (g)" } }
+            }
+        }
     });
 
-    const modalClose = document.getElementById('modalClose');
-    const modalCancel = document.getElementById('modalCancel');
-    const modalConfirm = document.getElementById('modalConfirm');
-    if (modalClose) modalClose.addEventListener('click', hideBackModal);
-    if (modalCancel) modalCancel.addEventListener('click', hideBackModal);
-    if (modalConfirm) modalConfirm.addEventListener('click', handleBackConfirmation);
+    // 📈 Init gyroscope chart
+    const gyroCtx = document.getElementById("gyroChart").getContext("2d");
+    gyroChart = new Chart(gyroCtx, {
+        type: "line",
+        data: gyroData,
+        options: {
+            responsive: true,
+            plugins: { legend: { position: "top" } },
+            scales: {
+                x: { title: { display: true, text: "Time" } },
+                y: { title: { display: true, text: "Angular Velocity (°/s)" } }
+            }
+        }
+    });
 
+    // Load map after small delay (to avoid race condition)
     setTimeout(() => {
         if (!mapInitialized && typeof google !== 'undefined' && typeof google.maps !== 'undefined') {
             initMap();
@@ -275,5 +354,5 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("Google Maps API failed to load");
             showErrorNotification();
         }
-    }, 3000);
+    }, 1000);
 });

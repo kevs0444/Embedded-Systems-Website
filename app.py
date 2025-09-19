@@ -520,7 +520,6 @@ def stop_act6_route():
         print("Act6 (GPS) monitoring stopped")
     return redirect(url_for("index"))
 
-
 # -------------------- Static Files --------------------
 @app.route('/static/<path:path>')
 def send_static(path):

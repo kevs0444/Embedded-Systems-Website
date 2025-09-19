@@ -6,6 +6,7 @@
     <title>Activity 6 - GPS Tracking</title>
     <link rel="stylesheet" href="/static/css/style.css">
     <link rel="stylesheet" href="/static/css/act6.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body data-theme="light">
     <!-- Status Indicator -->
@@ -63,19 +64,33 @@
     </header>
 
     <!-- Main Content -->
-    <main class="container">
-        <!-- GPS Cards -->
-        <div class="cards-container single-row">
-            <div class="card accent-border">
-                <h3>Latitude</h3>
-                <div class="value" id="latitude">--</div>
-                <div class="badge" id="latitudeBadge">--</div>
+    <main class="container two-column">
+        <!-- Left Panel -->
+        <div class="left-panel">
+            <!-- Map Container -->
+            <div class="chart-container">
+                <h3>Real-Time Location</h3>
+                <div id="map"></div>
             </div>
 
+            <!-- Accelerometer Chart -->
+            <div class="chart-container">
+                <h3>Accelerometer Data</h3>
+                <canvas id="accelChart"></canvas>
+            </div>
+
+            <!-- Gyroscope Chart -->
+            <div class="chart-container">
+                <h3>Gyroscope Data</h3>
+                <canvas id="gyroChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Right Panel -->
+        <div class="right-panel">
             <div class="card accent-border">
-                <h3>Longitude</h3>
-                <div class="value" id="longitude">--</div>
-                <div class="badge" id="longitudeBadge">--</div>
+                <h3>Time</h3>
+                <div class="value" id="timeCard">--</div>
             </div>
 
             <div class="card accent-border">
@@ -89,58 +104,34 @@
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Map Container -->
-        <div class="chart-container">
-            <h3>Location Map</h3>
-            <div id="map"></div>
-        </div>
-
-        <!-- GPS Data Table -->
-        <div class="chart-container">
-            <h3>GPS Data</h3>
-            <div class="table-container">
-                <table class="data-table">
-                    <tbody>
-                        <tr>
-                            <td class="label">GPS Fix:</td>
-                            <td class="value" id="gpsFix">Searching</td>
-                        </tr>
-                        <tr>
-                            <td class="label">Satellites:</td>
-                            <td class="value" id="satellites">0</td>
-                        </tr>
-                        <tr>
-                            <td class="label">Latitude:</td>
-                            <td class="value" id="latitudeValue">14.599500</td>
-                        </tr>
-                        <tr>
-                            <td class="label">Longitude:</td>
-                            <td class="value" id="longitudeValue">120.984200</td>
-                        </tr>
-                        <tr>
-                            <td class="label">Altitude:</td>
-                            <td class="value" id="altitude">0m</td>
-                        </tr>
-                        <tr>
-                            <td class="label">Speed:</td>
-                            <td class="value" id="speed">0knots</td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div class="card accent-border">
+                <h3>Latitude</h3>
+                <div class="value" id="latitude">--</div>
+                <div class="badge" id="latitudeBadge">--</div>
             </div>
-        </div>
 
-        <!-- Footer -->
-        <div class="footer">
-            Last update: <span id="time">--</span>
+            <div class="card accent-border">
+                <h3>Longitude</h3>
+                <div class="value" id="longitude">--</div>
+                <div class="badge" id="longitudeBadge">--</div>
+            </div>
+
+            <div class="card accent-border">
+                <h3>Satellites</h3>
+                <div class="value" id="satelliteCard">0</div>
+            </div>
         </div>
     </main>
 
+    <!-- Footer -->
+    <div class="footer">
+        Last update: <span id="time">--</span>
+    </div>
+
     <!-- Google Maps JS -->
     <script async defer
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDBF_5Gw8yR5DGRPPhd4XGltGVStgGN4vw&callback=initMap">
+        src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap">
     </script>
 
     <!-- Scripts -->
