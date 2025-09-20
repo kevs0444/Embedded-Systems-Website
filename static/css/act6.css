@@ -1,30 +1,57 @@
 /* ================================
    Activity 6 specific styles
    Matching Activity 4 design
-   ================================ */
+=============================== */
 
 /* --------------------------
    Two-column Layout
-   -------------------------- */
+-------------------------- */
+/* Make left and right panels equal height */
 .container.two-column {
-    display: grid;
-    grid-template-columns: 2fr 1fr;
+    display: flex;
     gap: 2rem;
     width: 95%;
     max-width: 1400px;
     margin: 20px auto;
+    align-items: stretch; /* stretch both panels to same height */
 }
 
-.left-panel,
+/* Left Panel: Map fills height of right panel */
+.left-panel {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch; /* stretch map to fill panel */
+}
+
+/* Map container takes full left-panel height */
+.left-panel .chart-container {
+    flex: 1;
+    min-height: 0; /* allow flex to control height */
+}
+
+/* Right Panel: Stacked charts */
 .right-panel {
+    flex: 1;
     display: flex;
     flex-direction: column;
     gap: 1.5rem;
 }
 
+/* Each chart in right panel gets equal height */
+.right-panel .chart-container.chart-stack {
+    flex: 1;
+    min-height: 0; /* allow flex to control height */
+}
+
+/* Optional: keep cards separate below */
+.cards-container.single-row {
+    margin-top: 2rem;
+}
+
 /* --------------------------
    Map Container
-   -------------------------- */
+-------------------------- */
 .chart-container {
     border-radius: 20px;
     padding: 25px;
@@ -32,7 +59,7 @@
     width: 100%;
     background: var(--card-bg, transparent);
     box-shadow: 0 10px 30px rgba(0,0,0,0.12);
-    min-height: 420px;
+    min-height: 250px;
     backdrop-filter: blur(10px);
     border: 2px solid var(--accent);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -53,6 +80,12 @@
     z-index: 1;
 }
 
+/* Stack gyro + accel charts in right panel */
+.chart-stack {
+    flex: 1;
+    min-height: 200px;
+}
+
 /* Ensure map tiles load properly */
 .gm-style {
     font: inherit;
@@ -69,13 +102,13 @@
 
 /* --------------------------
    Cards Layout
-   -------------------------- */
+-------------------------- */
 .cards-container.single-row {
     display: grid;
-    grid-template-columns: repeat(3, 1fr); 
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 1rem;
     width: 95%;
-    max-width: 1100px;
+    max-width: 1400px;
     margin: 20px auto;
 }
 
@@ -92,9 +125,9 @@
 
 .alert-display {
     display: flex;
-    align-items: center;     /* vertical centering */
-    justify-content: center; /* horizontal centering */
-    gap: 10px;               /* spacing between icon and text */
+    align-items: center;     
+    justify-content: center; 
+    gap: 10px;               
     text-align: center;
 }
 
@@ -140,50 +173,8 @@
 }
 
 /* --------------------------
-   GPS Data Table
-   -------------------------- */
-.table-container {
-    margin-top: 20px;
-}
-
-.data-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.data-table tr {
-    border-bottom: 1px solid rgba(128, 128, 128, 0.2);
-}
-
-.data-table tr:last-child {
-    border-bottom: none;
-}
-
-.data-table td {
-    padding: 12px 15px;
-}
-
-.data-table .label {
-    font-weight: bold;
-    color: var(--text-2);
-    width: 40%;
-}
-
-.data-table .value {
-    color: var(--accent);
-}
-
-.data-table .value.good {
-    color: #4caf50;
-}
-
-.data-table .value.bad {
-    color: #f44336;
-}
-
-/* --------------------------
    GPS Icon
-   -------------------------- */
+-------------------------- */
 .gps-icon {
     font-size: 2rem;
     margin-bottom: 10px;
@@ -196,7 +187,7 @@
 
 /* --------------------------
    Badges
-   -------------------------- */
+-------------------------- */
 .badge {
     display: inline-block;
     padding: 4px 8px;
@@ -222,7 +213,7 @@
 
 /* --------------------------
    Theme variables
-   -------------------------- */
+-------------------------- */
 [data-theme="light"] {
     --chart-label: #333;
     --text-2: #333;
@@ -248,8 +239,44 @@
 }
 
 /* --------------------------
+   Subtitle with Button
+-------------------------- */
+.subtitle-with-button {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+}
+
+.subtitle-with-button h3 {
+    margin: 0;
+    font-size: 1.2rem;
+}
+
+.icon-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.icon-btn img.speaker-icon {
+    width: 28px;
+    height: 28px;
+    opacity: 0.8;
+    transition: opacity 0.3s ease;
+}
+
+.icon-btn img.speaker-icon:hover {
+    opacity: 1;
+}
+
+/* --------------------------
    Responsive adjustments
-   -------------------------- */
+-------------------------- */
 @media (max-width: 1100px) {
     .container.two-column {
         grid-template-columns: 1fr;
@@ -268,7 +295,7 @@
     }
 
     .chart-container {
-        min-height: 350px;
+        min-height: 200px;
         padding: 20px;
     }
 }
@@ -279,7 +306,7 @@
     }
 
     .chart-container {
-        min-height: 300px;
+        min-height: 150px;
         padding: 15px;
     }
 

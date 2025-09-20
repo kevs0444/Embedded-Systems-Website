@@ -5,12 +5,12 @@ let mapInitialized = false;
 
 let lastLat = null;
 let lastLon = null;
+let lastCity = ""; // store current city name
 
 // =========================
 // Map Styles
 // =========================
-const lightMapStyle = []; // default Google style
-
+const lightMapStyle = [];
 const darkMapStyle = [
     { elementType: "geometry", stylers: [{ color: "#212121" }] },
     { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
@@ -29,30 +29,9 @@ let accelChart;
 let accelData = {
     labels: [],
     datasets: [
-        {
-            label: "Accel X",
-            borderColor: "rgba(255, 99, 132, 1)",
-            backgroundColor: "rgba(255, 99, 132, 0.2)",
-            data: [],
-            fill: false,
-            tension: 0.4
-        },
-        {
-            label: "Accel Y",
-            borderColor: "rgba(54, 162, 235, 1)",
-            backgroundColor: "rgba(54, 162, 235, 0.2)",
-            data: [],
-            fill: false,
-            tension: 0.4
-        },
-        {
-            label: "Accel Z",
-            borderColor: "rgba(75, 192, 192, 1)",
-            backgroundColor: "rgba(75, 192, 192, 0.2)",
-            data: [],
-            fill: false,
-            tension: 0.4
-        }
+        { label: "Accel X", borderColor: "rgba(255, 99, 132, 1)", backgroundColor: "rgba(255, 99, 132, 0.2)", data: [], fill: false, tension: 0.4 },
+        { label: "Accel Y", borderColor: "rgba(54, 162, 235, 1)", backgroundColor: "rgba(54, 162, 235, 0.2)", data: [], fill: false, tension: 0.4 },
+        { label: "Accel Z", borderColor: "rgba(75, 192, 192, 1)", backgroundColor: "rgba(75, 192, 192, 0.2)", data: [], fill: false, tension: 0.4 }
     ]
 };
 
@@ -63,30 +42,9 @@ let gyroChart;
 let gyroData = {
     labels: [],
     datasets: [
-        {
-            label: "Gyro X",
-            borderColor: "rgba(255, 206, 86, 1)",
-            backgroundColor: "rgba(255, 206, 86, 0.2)",
-            data: [],
-            fill: false,
-            tension: 0.4
-        },
-        {
-            label: "Gyro Y",
-            borderColor: "rgba(153, 102, 255, 1)",
-            backgroundColor: "rgba(153, 102, 255, 0.2)",
-            data: [],
-            fill: false,
-            tension: 0.4
-        },
-        {
-            label: "Gyro Z",
-            borderColor: "rgba(255, 159, 64, 1)",
-            backgroundColor: "rgba(255, 159, 64, 0.2)",
-            data: [],
-            fill: false,
-            tension: 0.4
-        }
+        { label: "Gyro X", borderColor: "rgba(255, 206, 86, 1)", backgroundColor: "rgba(255, 206, 86, 0.2)", data: [], fill: false, tension: 0.4 },
+        { label: "Gyro Y", borderColor: "rgba(153, 102, 255, 1)", backgroundColor: "rgba(153, 102, 255, 0.2)", data: [], fill: false, tension: 0.4 },
+        { label: "Gyro Z", borderColor: "rgba(255, 159, 64, 1)", backgroundColor: "rgba(255, 159, 64, 0.2)", data: [], fill: false, tension: 0.4 }
     ]
 };
 
@@ -112,10 +70,7 @@ function initMap() {
             map: map,
             title: "Waiting for GPS...",
             visible: false,
-            icon: {
-                url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png",
-                scaledSize: new google.maps.Size(40, 40)
-            }
+            icon: { url: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png", scaledSize: new google.maps.Size(40, 40) }
         });
 
         mapInitialized = true;
@@ -123,15 +78,12 @@ function initMap() {
 
         showGPSLoadingNotification();
 
-        // Update GPS every 2s
-        setInterval(updateGPSLocation, 2000);
-
-        // Update charts every 1s
-        setInterval(updateSensorCharts, 1000);
+        setInterval(updateGPSLocation, 2000); // GPS every 2s
+        setInterval(updateSensorCharts, 2000); // Sensors every 2s
 
         initTheme();
         initNotifications();
-
+        initSpeakerButton(); // initialize speaker button
     } catch (error) {
         console.error("Error initializing Google Maps:", error);
         showErrorNotification();
@@ -143,20 +95,19 @@ function initMap() {
 // =========================
 function updateGPSLocation() {
     fetch('/act6_data')
-        .then(response => response.json())
+        .then(res => res.json())
         .then(data => {
             if (data.lat && data.lon) {
                 lastLat = data.lat;
                 lastLon = data.lon;
+                lastCity = data.city || "";
             }
 
             if (lastLat !== null && lastLon !== null) {
                 const newPos = { lat: lastLat, lng: lastLon };
-
                 if (mapInitialized && marker) {
                     marker.setPosition(newPos);
                     marker.setVisible(true);
-
                     if (data.fix) {
                         map.setCenter(newPos);
                         map.setZoom(16);
@@ -170,8 +121,8 @@ function updateGPSLocation() {
             updateStatus(true);
             hideErrorNotification();
         })
-        .catch(error => {
-            console.error('Error fetching GPS data:', error);
+        .catch(err => {
+            console.error("Error fetching GPS data:", err);
             updateStatus(false);
             showErrorNotification();
         });
@@ -182,39 +133,35 @@ function updateGPSLocation() {
 // =========================
 function updateSensorCharts() {
     fetch('/act6_data')
-        .then(response => response.json())
+        .then(res => res.json())
         .then(data => {
             const now = new Date().toLocaleTimeString();
 
-            // Accelerometer
             if (data.accel) {
                 accelData.labels.push(now);
                 accelData.datasets[0].data.push(data.accel.x);
                 accelData.datasets[1].data.push(data.accel.y);
                 accelData.datasets[2].data.push(data.accel.z);
-
                 if (accelData.labels.length > 10) {
                     accelData.labels.shift();
                     accelData.datasets.forEach(ds => ds.data.shift());
                 }
-                accelChart.update();
+                accelChart.update('active');
             }
 
-            // Gyroscope
             if (data.gyro) {
                 gyroData.labels.push(now);
                 gyroData.datasets[0].data.push(data.gyro.x);
                 gyroData.datasets[1].data.push(data.gyro.y);
                 gyroData.datasets[2].data.push(data.gyro.z);
-
                 if (gyroData.labels.length > 10) {
                     gyroData.labels.shift();
                     gyroData.datasets.forEach(ds => ds.data.shift());
                 }
-                gyroChart.update();
+                gyroChart.update('active');
             }
         })
-        .catch(error => console.error("Error fetching sensor data:", error));
+        .catch(err => console.error("Error fetching sensor data:", err));
 }
 
 // =========================
@@ -224,12 +171,12 @@ function updateGPSDisplayLoading() {
     document.getElementById('latitude').textContent = "--";
     document.getElementById('longitude').textContent = "--";
 
-    const gpsStatusBadge = document.getElementById('gpsStatusBadge');
-    const gpsStatusText = document.getElementById('gpsStatusText');
-    const gpsIcon = document.getElementById('gpsIcon');
-    if (gpsStatusBadge) gpsStatusBadge.className = 'badge warn';
-    if (gpsStatusText) gpsStatusText.textContent = 'Loading...';
-    if (gpsIcon) gpsIcon.innerHTML = '<img src="/static/icons/finding.png" alt="GPS Loading Icon">';
+    const badge = document.getElementById('gpsStatusBadge');
+    const text = document.getElementById('gpsStatusText');
+    const icon = document.getElementById('gpsIcon');
+    if (badge) badge.className = 'badge warn';
+    if (text) text.textContent = 'Loading...';
+    if (icon) icon.innerHTML = '<img src="/static/icons/finding.png" alt="GPS Loading Icon">';
 }
 
 function updateGPSDisplay(data) {
@@ -238,36 +185,61 @@ function updateGPSDisplay(data) {
     document.getElementById('latitude').textContent = data.lat.toFixed(6);
     document.getElementById('longitude').textContent = data.lon.toFixed(6);
 
-    const gpsStatusBadge = document.getElementById('gpsStatusBadge');
-    const gpsStatusText = document.getElementById('gpsStatusText');
-    const gpsIcon = document.getElementById('gpsIcon');
+    const badge = document.getElementById('gpsStatusBadge');
+    const text = document.getElementById('gpsStatusText');
+    const icon = document.getElementById('gpsIcon');
 
     if (data.fix) {
-        gpsStatusBadge.className = 'badge ok';
-        gpsStatusText.textContent = 'Acquired';
-        gpsIcon.innerHTML = '<img src="/static/icons/gps-on.png" alt="GPS On Icon">';
+        badge.className = 'badge ok';
+        text.textContent = 'Acquired';
+        icon.innerHTML = '<img src="/static/icons/gps-on.png" alt="GPS On Icon">';
     } else {
-        gpsStatusBadge.className = 'badge danger';
-        gpsStatusText.textContent = 'Searching';
-        gpsIcon.innerHTML = '<img src="/static/icons/gps-off.png" alt="GPS Off Icon">';
+        badge.className = 'badge danger';
+        text.textContent = 'Searching';
+        icon.innerHTML = '<img src="/static/icons/gps-off.png" alt="GPS Off Icon">';
     }
 
     document.getElementById('latitudeBadge').textContent = data.lat >= 0 ? 'N' : 'S';
     document.getElementById('longitudeBadge').textContent = data.lon >= 0 ? 'E' : 'W';
     document.getElementById('satelliteCard').textContent = data.satellites;
+
+    lastCity = data.city || "";
 }
 
 // =========================
-// Notifications & Theme
+// Speaker Button (Activity 6) - DEBUG VERSION
 // =========================
-function showGPSLoadingNotification() {
-    const n = document.createElement("div");
-    n.className = "notification gps-loading";
-    n.innerHTML = "⏳ GPS is loading... searching for satellites";
-    document.body.appendChild(n);
-    setTimeout(() => n.remove(), 5000);
+function initSpeakerButton() {
+    const btn = document.getElementById('speakerBtn');
+    if (!btn) return;
+
+    let voices = [];
+    function loadVoices() { voices = window.speechSynthesis.getVoices(); }
+    loadVoices();
+    if (speechSynthesis.onvoiceschanged !== undefined) speechSynthesis.onvoiceschanged = loadVoices;
+
+    function speakText(text) {
+        if (!text) return;
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.voice = voices.find(v => v.lang.includes('en')) || voices[0];
+        utterance.rate = 1;
+        utterance.pitch = 1;
+        utterance.volume = 1;
+        window.speechSynthesis.speak(utterance);
+    }
+
+    btn.addEventListener('click', () => {
+        fetch('/speak_text')
+            .then(res => res.json())
+            .then(data => speakText(data.text))
+            .catch(err => speakText("Unable to fetch GPS data. Please try again."));
+    });
 }
 
+// =========================
+// Theme & Notifications
+// =========================
 function initTheme() {
     const themeBtn = document.getElementById('themeBtn');
     const themeIcon = document.getElementById('themeIcon');
@@ -285,16 +257,9 @@ function initTheme() {
             const next = current === 'light' ? 'dark' : 'light';
             document.body.setAttribute('data-theme', next);
             localStorage.setItem('theme', next);
-
             themeIcon.src = next === 'light' ? '/static/icons/dark-mode.png' : '/static/icons/light-mode.png';
             themeIcon.alt = next === 'light' ? 'Switch to dark mode' : 'Switch to light mode';
-
-            // Update Google Map style on theme switch
-            if (map) {
-                map.setOptions({
-                    styles: next === 'dark' ? darkMapStyle : lightMapStyle
-                });
-            }
+            if (map) map.setOptions({ styles: next === 'dark' ? darkMapStyle : lightMapStyle });
         });
     }
 }
@@ -302,6 +267,14 @@ function initTheme() {
 function initNotifications() {
     const closeNotif = document.getElementById('closeNotif');
     if (closeNotif) closeNotif.addEventListener('click', hideErrorNotification);
+}
+
+function showGPSLoadingNotification() {
+    const n = document.createElement("div");
+    n.className = "notification gps-loading";
+    n.innerHTML = "⏳ GPS is loading... searching for satellites";
+    document.body.appendChild(n);
+    setTimeout(() => n.remove(), 5000);
 }
 
 function showErrorNotification() {
@@ -337,65 +310,42 @@ function updateTime() {
 }
 
 // =========================
-// DOM Ready
+// DOM Ready - UPDATED
 // =========================
 document.addEventListener('DOMContentLoaded', () => {
-    // 🕒 refresh time every second
     setInterval(updateTime, 1000);
 
-    // 📈 Init accelerometer chart
+    // Initialize speaker button immediately
+    initSpeakerButton();
+
     const accelCtx = document.getElementById("accelChart").getContext("2d");
     accelChart = new Chart(accelCtx, {
         type: "line",
         data: accelData,
         options: {
             responsive: true,
-            animation: {
-                duration: 800,
-                easing: "easeInOutCubic"
-            },
+            animation: { duration: 1800, easing: "easeInOutCubic" },
             plugins: { legend: { position: "top" } },
-            scales: {
-                x: { title: { display: true, text: "Time" } },
-                y: { title: { display: true, text: "Acceleration (g)" } }
-            },
-            interaction: {
-                intersect: false,
-                mode: 'index'
-            },
-            elements: {
-                line: { tension: 0.4 }
-            }
+            scales: { x: { title: { display: true, text: "Time" } }, y: { title: { display: true, text: "Acceleration (g)" } } },
+            interaction: { intersect: false, mode: 'index' },
+            elements: { line: { tension: 0.4 } }
         }
     });
 
-    // 📈 Init gyroscope chart
     const gyroCtx = document.getElementById("gyroChart").getContext("2d");
     gyroChart = new Chart(gyroCtx, {
         type: "line",
         data: gyroData,
         options: {
             responsive: true,
-            animation: {
-                duration: 800,
-                easing: "easeInOutCubic"
-            },
+            animation: { duration: 1800, easing: "easeInOutCubic" },
             plugins: { legend: { position: "top" } },
-            scales: {
-                x: { title: { display: true, text: "Time" } },
-                y: { title: { display: true, text: "Angular Velocity (°/s)" } }
-            },
-            interaction: {
-                intersect: false,
-                mode: 'index'
-            },
-            elements: {
-                line: { tension: 0.4 }
-            }
+            scales: { x: { title: { display: true, text: "Time" } }, y: { title: { display: true, text: "Angular Velocity (°/s)" } } },
+            interaction: { intersect: false, mode: 'index' },
+            elements: { line: { tension: 0.4 } }
         }
     });
 
-    // Load map after small delay (to avoid race condition)
     setTimeout(() => {
         if (!mapInitialized && typeof google !== 'undefined' && typeof google.maps !== 'undefined') {
             initMap();

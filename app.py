@@ -5,12 +5,12 @@ import signal
 import time
 import threading
 import json
+import pyttsx3
 import act1
 import act2  # Updated version with deferred GPIO setup
 import act4
 from act4 import get_sensor_data, start_act4, stop_act4, email_sent, email_sent_lock
 import act6
-from act6 import start_act6, stop_act6, get_location
 from datetime import datetime, timedelta
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
@@ -21,7 +21,6 @@ current_activity = None  # 'act1', 'act2', or None
 # Path for saving historical data (Act2)
 ACT2_HISTORY_DIR = "/home/systemshapers/Embedded-Systems-Website/historicaldataact2"
 ACT2_HISTORY_FILE = os.path.join(ACT2_HISTORY_DIR, "historical_data_act2.json")
-
 
 # Path for saving historical data (Act4)
 ACT4_HISTORY_DIR = "/home/systemshapers/Embedded-Systems-Website/historicaldataact4"
@@ -47,7 +46,7 @@ def stop_current_activity():
         save_act2_history()
         print("Act2 monitoring stopped and GPIO cleaned up")
     elif current_activity == 'act6':
-        stop_act6()
+        act6.stop_act6()  # Fixed
         print("Act6 (GPS) monitoring stopped")
     current_activity = None
 
@@ -501,21 +500,37 @@ def act6_page():
     if current_activity:
         stop_current_activity()
         time.sleep(1)
-    success = start_act6()
+    success = act6.start_act6()  # call from act6 module
     current_activity = 'act6' if success else None
     return render_template("act6.html")
 
 @app.route("/act6_data")
 def act6_data():
     """Return the latest GPS location & satellite info as JSON"""
-    data = get_location()
+    data = act6.get_location()  # call from act6 module
     return jsonify(data)
+
+@app.route('/speak_text')
+def speak_text():
+    data = act6.get_location()
+    lat = data.get("lat")
+    lon = data.get("lon")
+    city = data.get("city", "Unknown location")
+
+    if lat is not None and lon is not None and data.get("fix"):
+        text = f"Location acquired. You are at {city}. Latitude {lat:.6f}, Longitude {lon:.6f}."
+    elif lat is None or lon is None:
+        text = "GPS module is initializing. Searching for signal..."
+    else:
+        text = "GPS is searching for satellites. Please wait for location acquisition."
+
+    return jsonify({"text": text})
 
 @app.route("/stop_act6")
 def stop_act6_route():
     global current_activity
     if current_activity == 'act6':
-        stop_act6()
+        act6.stop_act6()
         current_activity = None
         print("Act6 (GPS) monitoring stopped")
     return redirect(url_for("index"))
