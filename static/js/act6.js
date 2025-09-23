@@ -207,7 +207,7 @@ function updateGPSDisplay(data) {
 }
 
 // =========================
-// Speaker Button (Activity 6) - DEBUG VERSION
+// Speaker Button (Activity 6)
 // =========================
 function initSpeakerButton() {
     const btn = document.getElementById('speakerBtn');
@@ -235,6 +235,45 @@ function initSpeakerButton() {
             .then(data => speakText(data.text))
             .catch(err => speakText("Unable to fetch GPS data. Please try again."));
     });
+}
+
+// =========================
+// Back Button & Modal Functions (Same as Act1)
+// =========================
+function showBackModal() {
+    const m = document.getElementById('backModal');
+    if (m) m.classList.add('show');
+}
+
+function hideBackModal() {
+    const m = document.getElementById('backModal');
+    if (m) m.classList.remove('show');
+}
+
+function handleBackConfirmation() {
+    hideBackModal();
+    window.location.href = '/stop_act6';
+}
+
+// =========================
+// Initialize Back Button & Modal
+// =========================
+function initBackButton() {
+    const backButton = document.querySelector('.back-btn');
+    if (backButton) {
+        backButton.addEventListener('click', function (e) {
+            e.preventDefault();
+            showBackModal();
+        });
+    }
+
+    const modalClose = document.getElementById('modalClose');
+    const modalCancel = document.getElementById('modalCancel');
+    const modalConfirm = document.getElementById('modalConfirm');
+
+    if (modalClose) modalClose.addEventListener('click', hideBackModal);
+    if (modalCancel) modalCancel.addEventListener('click', hideBackModal);
+    if (modalConfirm) modalConfirm.addEventListener('click', handleBackConfirmation);
 }
 
 // =========================
@@ -314,6 +353,9 @@ function updateTime() {
 // =========================
 document.addEventListener('DOMContentLoaded', () => {
     setInterval(updateTime, 1000);
+
+    // Initialize back button and modal
+    initBackButton();
 
     // Initialize speaker button immediately
     initSpeakerButton();

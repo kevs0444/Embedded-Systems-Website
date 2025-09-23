@@ -271,17 +271,25 @@ function loadHistoricalData() {
                 return;
             }
 
-            // Format: dd/mm/yy h:m AM/PM
-            const labels = rawLabels.map(ts => {
-                const d = new Date(ts);
-                let hours = d.getHours();
-                const minutes = d.getMinutes().toString().padStart(2, '0');
-                const ampm = hours >= 12 ? 'PM' : 'AM';
-                hours = hours % 12 || 12;
-                const day = d.getDate().toString().padStart(2, '0');
-                const month = (d.getMonth() + 1).toString().padStart(2, '0');
-                const year = d.getFullYear().toString().slice(-2);
-                return `${day}/${month}/${year} ${hours}:${minutes} ${ampm}`;
+            // Convert to dd/mm/yy format
+            const labels = rawLabels.map(label => {
+                try {
+                    // Parse the existing format "dd/mm/yyyy hh:mm AM/PM"
+                    const parts = label.split(' ');
+                    if (parts.length >= 3) {
+                        const datePart = parts[0]; // "dd/mm/yyyy"
+                        const timePart = parts[1]; // "hh:mm"
+                        const ampm = parts[2]; // "AM/PM"
+                        
+                        // Extract day, month, year
+                        const [day, month, year] = datePart.split('/');
+                        // Convert to dd/mm/yy format
+                        return `${day}/${month}/${year.slice(-2)} ${timePart} ${ampm}`;
+                    }
+                } catch (e) {
+                    console.warn('Error parsing date:', label, e);
+                }
+                return label; // fallback to original if parsing fails
             });
 
             const avgTemp = responseData.avg_temp || [];
@@ -302,7 +310,7 @@ function loadHistoricalData() {
             const stats = [];
             for (let i = 0; i < L; i++) {
                 stats.push({
-                    time: labels[i],
+                    time: labels[i], // Already in dd/mm/yy format
                     avgTemp: avgTemp[i],
                     peakTemp: peakTemp[i],
                     avgHum: avgHum[i],
