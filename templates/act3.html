@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activity 3 - Motion Sensor & Camera</title>
+    <link rel="stylesheet" href="/static/css/style.css">   <!-- Global styles -->
+    <link rel="stylesheet" href="/static/css/act3.css">    <!-- Act3-specific styles -->
+</head>
+<body data-theme="light">
+    <div class="status" id="status">🟢</div>
+    
+    <!-- Error Notification -->
+    <div class="notification error" id="errorNotif">
+        <div class="notif-content">
+            <span class="notif-icon">
+                <img src="/static/icons/warning.png" alt="Error Icon">
+            </span>
+            <div>
+                <div class="notif-title">Sensor Error</div>
+                <div class="notif-msg">Motion sensor or camera is not responding</div>
+            </div>
+            <button class="notif-close" id="closeNotif">×</button>
+        </div>
+    </div>
+    
+    <!-- Back Confirmation Modal -->
+    <div class="modal" id="backModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Confirm Navigation</h3>
+                <button class="modal-close" id="modalClose">×</button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to go back to the main menu?</p>
+                <p>This will stop the motion monitoring and clean up GPIO resources.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn cancel" id="modalCancel">Cancel</button>
+                <button class="modal-btn confirm" id="modalConfirm">Yes, Go Back</button>
+            </div>
+        </div>
+    </div>
+    
+    <header>
+        <div class="header-content">
+            <div class="header-nav">
+                <a href="#" class="back-btn">←</a>
+                <div class="brand">
+                    <h1>
+                        <img src="/static/icons/motion.png" 
+                             alt="Motion Sensor Icon" 
+                             style="width:28px;height:28px;vertical-align:middle;">
+                        Motion Sensor & Camera Dashboard
+                    </h1>
+                    <small>by System Shapers</small>
+                </div>
+            </div>
+            <button class="theme-btn" id="themeBtn">
+                <img src="/static/icons/dark-mode.png" alt="Switch to dark mode" class="theme-icon" id="themeIcon">
+            </button>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="grid">
+            <div class="card accent-border">
+                <h3>Motion Status</h3>
+                <div class="value" id="motionStatus">--</div>
+                <div class="badge" id="motionBadge">--</div>
+            </div>
+            
+            <div class="card accent-border">
+                <h3>Camera Status</h3>
+                <div class="value" id="cameraStatus">--</div>
+                <div class="badge ok">Ready</div>
+            </div>
+            
+            <div class="card accent-border">
+                <h3>Alert Status</h3>
+                <div class="alert-display">
+                    <div class="buzzer-icon" id="buzzer">
+                        <img src="/static/icons/buzzer.png" alt="Buzzer Icon">
+                    </div>
+                    <div class="badge" id="buzzerBadge">
+                        <span id="buzzerText">Standby</span>
+                        <img src="/static/icons/mute.png" alt="Mute Icon" id="buzzerStatusIcon">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Camera Preview Section -->
+        <div class="camera-container">
+            <div class="camera-card accent-border">
+                <div class="camera-header">
+                    <h3>Camera Preview</h3>
+                    <div class="camera-controls">
+                        <button class="camera-btn" id="captureImage" title="Capture Image">
+                            <img src="/static/icons/camera.png" alt="Capture Image">
+                        </button>
+                        <button class="camera-btn" id="startRecording" title="Start Recording">
+                            <img src="/static/icons/video.png" alt="Start Recording">
+                        </button>
+                        <button class="camera-btn" id="stopRecording" title="Stop Recording" disabled>
+                            <img src="/static/icons/stop.png" alt="Stop Recording">
+                        </button>
+                    </div>
+                </div>
+                <div class="camera-preview" id="cameraPreview">
+                    <div class="preview-placeholder">
+                        <img src="/static/icons/camera-off.png" alt="Camera Off">
+                        <p>Camera feed will appear here</p>
+                    </div>
+                </div>
+                <div class="camera-info">
+                    <span id="captureInfo">No images captured</span>
+                    <span id="recordingInfo">Not recording</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Charts Container -->
+        <div class="charts-container">
+            
+            <!-- Real-time Chart Container -->
+            <div class="chart-card accent-border" id="realChartContainer">
+                <div class="chart-header">
+                    <h3>Real-time Motion Events</h3>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="realChart"></canvas>
+                </div>
+            </div>
+
+            <!-- Historical Chart Container -->
+            <div class="chart-card accent-border" id="histChartContainer">
+                <div class="chart-header">
+                    <h3>Historical Motion Data</h3>
+                    <div class="chart-controls">
+                        <button class="clear-data-btn" id="clearData" title="Clear Data">
+                            <img src="/static/icons/trash.png" alt="Clear Data">
+                        </button>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <canvas id="histChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Motion Events Log -->
+        <div class="events-container">
+            <div class="events-card accent-border">
+                <div class="events-header">
+                    <h3>Recent Motion Events</h3>
+                    <button class="refresh-btn" id="refreshEvents" title="Refresh Events">
+                        <img src="/static/icons/refresh.png" alt="Refresh">
+                    </button>
+                </div>
+                <div class="events-list" id="eventsList">
+                    <div class="event-item">
+                        <span class="event-time">--:--:--</span>
+                        <span class="event-type">No events recorded</span>
+                        <span class="event-action">--</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Last update: <span id="time">--</span>
+        </div>
+    </main>
+
+    <!-- Load Chart.js first -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Your custom script -->
+    <script src="/static/js/act3.js"></script>
+</body>
+</html>

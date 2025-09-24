@@ -45,8 +45,11 @@ def stop_current_activity():
         act2.cleanup()
         save_act2_history()
         print("Act2 monitoring stopped and GPIO cleaned up")
+    elif current_activity == 'act4':
+        act4.stop_act4()
+        print("Act4 monitoring stopped and GPIO cleaned up")
     elif current_activity == 'act6':
-        act6.stop_act6()  # Fixed
+        act6.stop_act6()
         print("Act6 (GPS) monitoring stopped")
     current_activity = None
 

@@ -1,0 +1,467 @@
+/* ================================
+   Activity 3 specific styles
+   ================================ */
+
+/* --------------------------
+   Value Colors
+   -------------------------- */
+#motionStatus { color: #ff5722; }
+#cameraStatus { color: #2196f3; }
+
+/* Badge colors for different statuses */
+.badge.ok { background: #d4edda; color: #155724; }
+.badge.warn { background: #fff3cd; color: #856404; }
+.badge.danger { background: #f8d7da; color: #721c24; }
+
+/* --------------------------
+   Card Styles (match chart colors)
+   -------------------------- */
+.card.accent-border {
+    padding: 1.5rem;
+    border-radius: 20px;
+    text-align: center;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    border: 2px solid var(--accent);
+    backdrop-filter: blur(10px);
+}
+
+/* Theme-aware card background to match charts */
+[data-theme="light"] .card.accent-border {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+}
+
+[data-theme="dark"] .card.accent-border {
+    background: linear-gradient(135deg, rgba(40, 40, 55, 0.9) 0%, rgba(30, 30, 40, 0.9) 100%);
+}
+
+/* Hover effect */
+.card.accent-border:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+}
+
+/* Card headings and values */
+.card h3 {
+    margin-bottom: 0.5rem;
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.card .value {
+    font-size: 1.6rem;
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+}
+
+/* Alert display for buzzer card */
+.alert-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.buzzer-icon img {
+    width: 40px;
+    height: 40px;
+}
+
+/* --------------------------
+   Camera Container
+   -------------------------- */
+.camera-container {
+    width: 95%;
+    max-width: 1200px;
+    margin: 30px auto;
+}
+
+.camera-card {
+    border-radius: 20px;
+    padding: 25px;
+    background: var(--card-bg, transparent);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    backdrop-filter: blur(10px);
+    border: 2px solid var(--accent);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.camera-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+}
+
+.camera-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+[data-theme="dark"] .camera-header {
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.camera-header h3 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+.camera-controls {
+    display: flex;
+    gap: 12px;
+}
+
+.camera-btn {
+    padding: 12px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.05);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .camera-btn {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.camera-btn:hover:not(:disabled) {
+    transform: scale(1.15);
+    background: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] .camera-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.camera-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.camera-btn:hover:not(:disabled) {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="dark"] .camera-btn:hover:not(:disabled) {
+    box-shadow: 0 2px 8px rgba(255, 255, 255, 0.15);
+}
+
+.camera-preview {
+    width: 100%;
+    height: 300px;
+    background: var(--bg);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 15px;
+    overflow: hidden;
+    border: 2px solid var(--border);
+}
+
+.preview-placeholder {
+    text-align: center;
+    color: var(--text-2);
+}
+
+.preview-placeholder img {
+    width: 64px;
+    height: 64px;
+    margin-bottom: 10px;
+    opacity: 0.5;
+}
+
+.camera-preview img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}
+
+.camera-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    color: var(--text-2);
+}
+
+/* --------------------------
+   Charts Container
+   -------------------------- */
+.charts-container {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+    width: 95%;
+    max-width: 1200px;
+    margin: 30px auto;
+}
+
+.chart-card {
+    border-radius: 20px;
+    padding: 25px;
+    background: var(--card-bg, transparent);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    min-height: 420px;
+    backdrop-filter: blur(10px);
+    border: 2px solid var(--accent);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.chart-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+}
+
+.chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+[data-theme="dark"] .chart-header {
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.chart-header h3 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+.chart-controls {
+    display: flex;
+    gap: 12px;
+}
+
+.chart-wrapper {
+    flex: 1;
+    position: relative;
+    height: 350px;
+    width: 100%;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+canvas {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 12px;
+}
+
+.chartjs-render-monitor {
+    background: var(--chart-bg, rgba(255, 255, 255, 0.7));
+    border-radius: 12px;
+    padding: 15px;
+}
+
+[data-theme="dark"] .chartjs-render-monitor {
+    background: rgba(30, 30, 40, 0.7);
+}
+
+/* Theme-aware backgrounds for charts */
+[data-theme="light"] .chart-card {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    --chart-bg: rgba(255, 255, 255, 0.7);
+}
+
+[data-theme="dark"] .chart-card {
+    background: linear-gradient(135deg, rgba(40, 40, 55, 0.9) 0%, rgba(30, 30, 40, 0.9) 100%);
+    --chart-bg: rgba(30, 30, 40, 0.7);
+}
+
+/* --------------------------
+   Events Container
+   -------------------------- */
+.events-container {
+    width: 95%;
+    max-width: 1200px;
+    margin: 30px auto;
+}
+
+.events-card {
+    border-radius: 20px;
+    padding: 25px;
+    background: var(--card-bg, transparent);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.12);
+    backdrop-filter: blur(10px);
+    border: 2px solid var(--accent);
+}
+
+.events-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+[data-theme="dark"] .events-header {
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.events-header h3 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 600;
+}
+
+.refresh-btn {
+    padding: 10px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.05);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .refresh-btn {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.refresh-btn:hover {
+    transform: scale(1.15);
+    background: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] .refresh-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.events-list {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.event-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+[data-theme="dark"] .event-item {
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.event-item:last-child {
+    border-bottom: none;
+}
+
+.event-time {
+    font-weight: 600;
+    color: var(--accent);
+    min-width: 100px;
+}
+
+.event-type {
+    flex: 1;
+    margin: 0 15px;
+}
+
+.event-action {
+    font-size: 0.9rem;
+    color: var(--text-2);
+}
+
+/* --------------------------
+   Buttons hover effects
+   -------------------------- */
+.clear-data-btn, .camera-btn, .refresh-btn {
+    padding: 10px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.05);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+[data-theme="dark"] .clear-data-btn,
+[data-theme="dark"] .camera-btn,
+[data-theme="dark"] .refresh-btn {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.clear-data-btn:hover, .camera-btn:hover:not(:disabled), .refresh-btn:hover {
+    transform: scale(1.15);
+    background: rgba(0, 0, 0, 0.1);
+}
+
+[data-theme="dark"] .clear-data-btn:hover,
+[data-theme="dark"] .camera-btn:hover:not(:disabled),
+[data-theme="dark"] .refresh-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.clear-data-btn:hover {
+    box-shadow: 0 2px 8px rgba(244, 67, 54, 0.4);
+}
+
+/* --------------------------
+   Responsive adjustments
+   -------------------------- */
+@media (max-width: 768px) {
+    .camera-container,
+    .charts-container,
+    .events-container {
+        width: 100%;
+        gap: 20px;
+    }
+    
+    .camera-card,
+    .chart-card {
+        min-height: 350px;
+        padding: 20px;
+    }
+    
+    .chart-wrapper {
+        height: 280px;
+    }
+    
+    .camera-preview {
+        height: 250px;
+    }
+    
+    .chart-header h3,
+    .camera-header h3,
+    .events-header h3 {
+        font-size: 1.2rem;
+    }
+    
+    .grid {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .camera-controls {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .event-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 5px;
+    }
+    
+    .event-time {
+        min-width: auto;
+    }
+}
